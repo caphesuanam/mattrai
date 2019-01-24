@@ -1,0 +1,25 @@
+{
+  "services": [
+    {
+      "name": "CSM",
+      "instances": [
+        {
+          "name": "int",
+          "pingUrl" : "http://bla",
+          "status": {
+            "pingStatus": {
+              "result: "up",
+              "httpcode": 200
+            },
+            "healthCheckStatuses": {
+              "csmdb": {
+                "status": "UP"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+
+}

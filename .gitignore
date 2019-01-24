@@ -1,0 +1,15 @@
+.stack-work/
+dashboard.cabal
+*~
+out
+cabal.config
+*.iml
+
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/**/libraries
+.idea/**/modules.xml
+.idea/**/encodings.xml
