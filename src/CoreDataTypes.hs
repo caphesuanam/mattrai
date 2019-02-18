@@ -1,4 +1,4 @@
-module CoreDatatypes where
+module CoreDataTypes where
 
 import Data.Aeson (ToJSON, toJSON, object, (.=))
 import Data.Text (Text)
@@ -27,6 +27,10 @@ instance ToJSON HealthCheckResult where
 
 newtype HealthCheckItem = HealthCheckItem Text deriving (Show, Generic)
 instance ToJSON HealthCheckItem
+
+healthCheckItemName :: HealthCheckItem -> Text
+healthCheckItemName (HealthCheckItem i) = i
+
 
 data HealthCheckItemStatus = Up
                            | Down

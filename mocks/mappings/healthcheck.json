@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "url": "/heathcheck/happy"
+    "url": "/healthcheck/happy"
   },
   "response": {
     "status": 200,

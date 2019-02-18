@@ -1,6 +1,6 @@
  module Config where
 
-import CoreDatatypes
+import CoreDataTypes
 
 functional :: EnvironmentName
 functional = Environment "Functional"
@@ -29,29 +29,34 @@ data Instance = Instance {
 }
 
 services :: [Service'']
-services = [Service {
-  serName = Service' "Service1"
-, serInstances = [
-    Instance {
-      instEnvironmentName      = integration
-    , instPingEndpoint         = Endpoint "http://google.com"
-    , instHealthCheckEndpoints = [Endpoint "http://localhost:8080/foo/bar"]
-    , docs                     = Endpoint "http://news.bbc.co.uk"
-    }
-  ,
-    Instance {
-      instEnvironmentName      = production
-    , instPingEndpoint         = Endpoint "http://dnsprodafailure"
-    , instHealthCheckEndpoints = [Endpoint "http://dnshealthcheckfailure:8080/foo/bar"]
-    , docs                     = Endpoint "http://news.bbc.co.uk"
-    }
-  ,
-    Instance {
-      instEnvironmentName      = production
-    , instPingEndpoint         = Endpoint "http://localhost:8080/fourOfourresponse"
-    , instHealthCheckEndpoints = [] -- [Endpoint "http://dnshealthcheckfailure:8080/foo/bar"]
-    , docs                     = Endpoint "http://news.bbc.co.uk"
-    }
-  ]
+services = [
+  Service {
+    serName = Service' "Service1"
+,   serInstances = [
+      Instance {
+        instEnvironmentName      = integration
+      , instPingEndpoint         = Endpoint "http://google.com"
+      , instHealthCheckEndpoints = [Endpoint "http://localhost:8080/healthcheck/happy"]
+      , docs                     = Endpoint "http://news.bbc.co.uk"
+      }
+    ,
+      Instance {
+        instEnvironmentName      = production
+      , instPingEndpoint         = Endpoint "http://dnsprodafailure"
+      , instHealthCheckEndpoints = [Endpoint "http://dnshealthcheckfailure:8080/foo/bar"]
+      , docs                     = Endpoint "http://news.bbc.co.uk"
+      }
+    ]
+  },
+  Service {
+    serName = Service' "Service2"
+  , serInstances = [
+      Instance {
+        instEnvironmentName      = production
+      , instPingEndpoint         = Endpoint "http://localhost:8080/fourOfourresponse"
+      , instHealthCheckEndpoints = [] -- [Endpoint "http://dnshealthcheckfailure:8080/foo/bar"]
+      , docs                     = Endpoint "http://news.bbc.co.uk"
+      }
+    ]
 }]
 
