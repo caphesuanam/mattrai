@@ -1,18 +1,15 @@
 module CoreDataTypes where
 
 import Data.Aeson (ToJSON, toJSON, object, (.=))
+import Data.Hashable (Hashable)
 import Data.Text (Text)
 import GHC.Generics
 
--- Endpoint
-newtype Endpoint = Endpoint String deriving (Show, Eq, Generic)
+newtype Endpoint = Endpoint Text deriving (Show, Eq, Generic)
 instance ToJSON Endpoint
+instance Hashable Endpoint
 
 endpointToString (Endpoint s) = s
-
-
-
--- Results
 
 data HealthCheckResult = HealthCheckResult {
   healthCheckResultItemName   :: HealthCheckItem
@@ -42,11 +39,12 @@ data PingResult = Timeout
                 | DnsFailure
                 | UnknownFailure
                 | UnknownFailure2
+                | OtherFailure Text
                 | HttpCode Int
                 deriving (Show, Eq)
 instance ToJSON PingResult where
   toJSON stat =
-    let base = [ "status" .= if success then ("Up" :: Text) else "Down" ]
+    let base = [ "status" .= if success then "Up" :: Text else "Down" ]
         success = case stat of
                     HttpCode n | n >= 200 && n < 300 -> True
                     _                                -> False
@@ -59,7 +57,7 @@ newtype EnvironmentName = Environment Text deriving Show
 environmentNameAsText :: EnvironmentName -> Text
 environmentNameAsText (Environment str) = str
 
-newtype Service' = Service' {
+newtype ServiceName = ServiceName {
   serviceName :: Text
 } deriving Show
 
@@ -67,8 +65,45 @@ newtype Service' = Service' {
 data EndpointWithContext = EndpointWithContext {
   endpoint                               :: Endpoint
 , endpointWithContextEndpointType        :: EndpointType
-, endpointWithContextService             :: Service'
+, endpointWithContextService             :: ServiceName
 , endpointWithContextEnvironment         :: EnvironmentName
 } deriving Show
 
 data EndpointType = Ping | HealthCheck deriving (Show, Eq)
+
+data Instance = Instance {
+  instEnvironmentName      :: EnvironmentName
+, instPingEndpoint         :: Endpoint
+, miscEndpoints            :: [MiscEndpoint]
+, staticInfo               :: [(Text, Text)]
+}
+
+data MiscEndpoint = MiscEndpoint String Endpoint
+                  | LogsEndpoint Endpoint
+                  | DocsEndpoint Endpoint
+                  | HealthCheckEndpoint Endpoint
+
+data Service'' = Service {
+  serName      :: ServiceName
+, serInstances :: [Instance]
+}
+docsEndpoint :: Text -> MiscEndpoint
+docsEndpoint = DocsEndpoint . Endpoint
+
+healthCheckEndpoint :: Text -> MiscEndpoint
+healthCheckEndpoint = HealthCheckEndpoint . Endpoint
+
+isDoc (DocsEndpoint _) = True
+isDoc _                = False
+
+isHealthcheck (HealthCheckEndpoint _) = True
+isHealthcheck _                       = False
+
+isLog (LogsEndpoint _) = True
+isLog _                = False
+
+getEndpoint (DocsEndpoint ep) = ep
+getEndpoint (HealthCheckEndpoint ep) = ep
+getEndpoint (LogsEndpoint ep) = ep
+
+(-->) = (,)

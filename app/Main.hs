@@ -1,13 +1,26 @@
 module Main where
 
-import Happstack.Server ( simpleHTTP, nullConf, ok, toResponse )
+
+import           Control.Concurrent         (forkIO, threadDelay)
+import qualified Control.Monad.Parallel as Par (mapM)
+import Happstack.Server ( simpleHTTP, nullConf, ok, toResponse, serveDirectory, dir)
+import Happstack.Server.FileServe (Browsing(DisableBrowsing))
 import           Text.Blaze ((!))
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
-import Control.Monad (liftM)
+import Control.AutoUpdate (mkAutoUpdate, defaultUpdateSettings, UpdateSettings(updateAction, updateFreq))
+import Control.Monad (liftM, msum, forever)
+import Control.Monad.IO.Class (liftIO)
+import Data.IORef
 import Data.List (sort)
 import Data.Set as Set (toList, fromList)
 import Data.Text (Text(..))
+import System.Log.Logger ( updateGlobalLogger
+                         , rootLoggerName
+                         , setLevel
+                         , Priority(..)
+                         , infoM
+                         )
 
 import Config
 import CoreDataTypes
@@ -32,35 +45,31 @@ pingEndpoints = concatMap
                           }) (serInstances service))
                   services
 
-healthCheckEndpoints :: [EndpointWithContext]
-healthCheckEndpoints = concat $ concatMap
-                          (\service ->
-                             map (\inst ->
-                               map (\ep ->
-                                 EndpointWithContext{
-                                     endpointWithContextEndpointType = HealthCheck,
-                                     endpoint                        = ep,
-                                     endpointWithContextService      = serName service,
-                                     endpointWithContextEnvironment  = instEnvironmentName inst
-                                 }) (instHealthCheckEndpoints inst)) $ serInstances service)
-                          services
+emptyResultServices :: IO (IORef ResultServices)
+emptyResultServices = newIORef $ ResultServices []
 
 
 mapServicesToJSON :: IO ResultServices
 mapServicesToJSON =
-     let envNames = allEnvironments services
+     let envNames = allEnvironments' -- services
      in ResultServices <$> mapM (mapServiceToResultService envNames) services
 
-allEnvironments :: [Service''] -> [Text]
-allEnvironments = sort . mkUniq . map (environmentNameAsText . instEnvironmentName ) . concatMap serInstances
+mapServicesToJSON' :: IORef ResultServices -> IO ResultServices
+mapServicesToJSON' ref = do infoM "FOO.BAR" "Retriving statuses"
+                            t <- mapServicesToJSON
+                            writeIORef ref t
+                            readIORef ref
+allEnvironments' :: [Text]
+allEnvironments' = map environmentNameAsText allEnvironments
+
+-- allEnvironments :: [Service''] -> [Text]
+-- allEnvironments = sort . mkUniq . map (environmentNameAsText . instEnvironmentName ) . concatMap serInstances
 
 mapServiceToResultService :: [Text] -> Service'' -> IO ResultService
 mapServiceToResultService envNames service =
-  do s <- mapM (\envName -> mapInstancesToEnvironment envName (filter ((==  envName) . environmentNameAsText . instEnvironmentName) (serInstances service))) envNames
-     return $ ResultService {
-       resServiceName = serviceName $ serName service
-     , resServiceEnvironments = s
-     }
+  ResultService (serviceName $ serName service)
+                <$> Par.mapM (
+                      \envName -> mapInstancesToEnvironment envName (filter ((==  envName) . environmentNameAsText . instEnvironmentName) (serInstances service))) envNames
 
 mapInstancesToEnvironment :: Text -> [Instance] -> IO ResultEnvironment
 mapInstancesToEnvironment envName insts =
@@ -71,28 +80,51 @@ mapInstancesToEnvironment envName insts =
      }
 
 mapInstanceToResultInstance :: Instance -> IO ResultInstance
-mapInstanceToResultInstance inst =
-  do pingResult <- ping $ instPingEndpoint inst
-     aHealthCheckResult <- mapM mapHealthCheckEndpointToResult $ instHealthCheckEndpoints inst
-     print aHealthCheckResult
-     return $ ResultInstance {
-       resultInstanceEnvironmentName     = environmentNameAsText $ instEnvironmentName inst
-     , resultInstancePingEndpoint        = instPingEndpoint inst
-     , resultInstancePingResult          = pingResult
-     , resultInstanceDocumentation       = docs inst
-     , resultInstanceHealthCheckResults  = aHealthCheckResult
-     }
+mapInstanceToResultInstance inst = do
+  pingResult <- ping $ instPingEndpoint inst
+  bHealthCheckResult <- mapM (mapHealthCheckEndpointToResult . getEndpoint) (filter isHealthcheck $ miscEndpoints inst)
+  print bHealthCheckResult
+  return $
+    ResultInstance
+      { resultInstanceEnvironmentName = environmentNameAsText $ instEnvironmentName inst
+      , resultInstancePingEndpoint = instPingEndpoint inst
+      , resultInstancePingResult = pingResult
+      , resultInstanceDocumentation = map getEndpoint $ filter isDoc $ miscEndpoints inst
+      , resultInstanceLogs          = map getEndpoint $ filter isLog $ miscEndpoints inst
+      , resultInstanceHealthCheckResults = bHealthCheckResult
+      , information = staticInfo inst
+      }
 
 mapHealthCheckEndpointToResult :: Endpoint -> IO ResultHealthCheck
 mapHealthCheckEndpointToResult endpoint =
   do healthCheckResult <- healthCheckStatus endpoint
      return $ ResultHealthCheck {
-       healthCheckEndpoint    = endpoint
+       ResultJson.healthCheckEndpoint    = endpoint
      , healthCheckResultItems = healthCheckResult
      }
 
 
 main :: IO ()
-main = mapServicesToJSON >>= simpleHTTP nullConf . ok . toResponse . topLevelPage (allEnvironments services)
+main = do let sixtySeconds = 60000000
+          updateGlobalLogger rootLoggerName (setLevel INFO)
+          -- initialValue <- emptyResultServices
 
--- http://vtp-la-int.dev.cosmic.sky/legacy-adapter-app/health
+          ref <- emptyResultServices
+          _ <- forkIO $
+                  do _ <- mapServicesToJSON' ref
+                     threadDelay sixtySeconds
+                     return ()
+
+          -- results <- mkAutoUpdate defaultUpdateSettings {
+          --   updateAction = mapServicesToJSON' initialValue
+          -- , updateFreq = tenSeconds
+          -- }
+
+          simpleHTTP nullConf $
+            msum [
+                   dir "static" $ serveDirectory DisableBrowsing [] "static"
+                 -- , liftIO results >>= ok . toResponse . topLevelPage (allEnvironments services)
+                 , liftIO (readIORef ref) >>= ok . toResponse . topLevelPage (allEnvironments' {-services-})
+                 ]
+
+-- http://vtp-la-int.ttdev.cosmic.sky/legacy-adapter-app/health

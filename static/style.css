@@ -1,0 +1,47 @@
+/*body {
+  background-image: url("/static/eye-l.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}*/
+.statusTable {
+  display: table;
+  width: 100%
+}
+.statusTableBody{
+  display: table-row-group;
+}
+.statusTableRow {
+  display: table-row;
+}
+.statusTableHeading {
+  display: table-header-group
+}
+.statusTableCell, .statusTableHead {
+  border: 1px solid #999999;
+  display: table-cell;
+  padding: 4px 12px;
+  vertical-align: middle;
+}
+
+.instanceBox {
+  display: inline-block;
+  width: 120px;
+  height: 45px;
+}
+
+.redBackground {
+  background-color: rgb(255,40,40)
+}
+
+.greenBackground {
+  background-color: LightGreen
+}
+
+.red {
+  color: rgb(255,0,0)
+}
+
+.green {
+  color: rgb(68,157,68)
+}

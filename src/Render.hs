@@ -1,124 +1,155 @@
 module Render where
 
-import Data.Text (Text(..))
-import Text.Blaze (toValue,(!))
+import Prelude hiding (span, id, div, head)
+import Data.Text (Text,append)
+import Text.Blaze (toValue,(!),preEscapedText)
 import Text.Blaze.Html5 as H hiding (map)
-import Text.Blaze.Html5.Attributes as A
+import Text.Blaze.Html5.Attributes as A hiding (span)
 
+import BlazeUtils (addScript, addStyleSheet, anchor)
 import CoreDataTypes
 import ResultJson
 
-topLevelPage :: [Text] -> ResultServices -> H.Html
+
+topLevelPage :: [Text] -> ResultServices -> Html
 topLevelPage envKey result =
-    H.html $ do
-      H.head $ do
-        H.title "The all seeing eye"
-        H.style $ toHtml pageStyle
-        H.meta ! charset "utf-8"
-        H.meta ! name "viewport"
-               ! content "width=device-width, initial-scale=1, shrink-to-fit=no"
-        H.link ! rel "stylesheet"
-               ! type_ "text/css"
-               ! href "https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-        H.script mempty ! src "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-        H.script "$(function () { $('[data-toggle=\"tooltip\"]').tooltip() })"
+    html $ do
+      head $ do
+        H.title "Mattrai"
+        addStyleSheet "static/style.css"
+        meta ! charset "utf-8"
+        meta ! name "viewport"
+             ! content "width=device-width, initial-scale=1, shrink-to-fit=no"
+        addStyleSheet "https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css"
+        addScript "http://code.jquery.com/jquery-1.9.1.js"
+        addScript "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js"
+        script "$(function () { $('[data-toggle=\"tooltip\"]').tooltip() })"
+        addScript "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" -- Bootstrap Tooltips
+        addScript "/static/eng.js"
+      body $
+        div ! id "bg" $
+          if isLoading result then
+             loadingMessage
+          else
+            statusTable (map toHtml envKey) result
 
+isLoading :: ResultServices -> Bool
+isLoading (ResultServices []) = True
+isLoading (ResultServices _)  = False
 
-        -- Bootstrap Tooltips
-        -- https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js
-        H.script mempty ! src "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+loadingMessage :: Html
+loadingMessage = h1 "Loading..."
 
-      H.body $
-        statusTable envKey result
-
-statusHeaderRow :: [Text] -> H.Html
+statusHeaderRow :: [Html] -> Html
 statusHeaderRow =
-     (H.div ! class_ "statusTableRow") .
+     (div ! class_ "statusTableRow") .
        mappend (statusHeaderCell "Service") .
                mconcat . map statusHeaderCell
 
-statusHeaderCell :: Text -> H.Html
-statusHeaderCell = (H.div ! class_ "statusTableCell") . H.toHtml
+statusHeaderCell :: Html -> Html
+statusHeaderCell = div ! class_ "statusTableCell"
 
-statusTable :: [Text] -> ResultServices -> H.Html
+statusTable :: [Html] -> ResultServices -> Html
 statusTable envKey (ResultServices services) =
-             H.div ! class_ "statusTable" $ do
+             div ! class_ "statusTable" $ do
                 statusHeaderRow envKey
-                H.div ! class_ "statusTableBody" $
+                div ! class_ "statusTableBody" $
                   mconcat $ map statusService services
 
-pageStyle :: Text
-pageStyle =
-  ".statusTable {\
-  \  display: table; \
-  \  width: 100% \
-  \} \
-  \.statusTableBody{\
-  \  display: table-row-group; \
-  \} \
-  \.statusTableRow {\
-  \  display: table-row; \
-  \} \
-  \.statusTableHeading {\
-  \  display: table-header-group \
-  \} \
-  \.statusTableCell, .statusTableHead {\
-  \  border: 1px solid #999999;\
-  \  display: table-cell;\
-  \  padding: 3px 10px;\
-  \  vertical-align: middle;\
-  \}"
+instanceModal :: Text -> ResultInstance -> Html
+instanceModal serviceName inst =
+  div ! class_ "modal fade"
+      ! id (toValue $ instanceId inst)
+      ! tabindex "-1"
+      ! role "dialog" $
+    div ! class_ "modal-dialog" $
+      div ! class_ "modal-content" $ do
+        div ! class_ "modal-header" $ do
+          closeButton ! dataAttribute "aria-label" "Close" $
+            span ! dataAttribute "aria-hidden" "true" $ preEscapedText ("&times;" :: Text)
+          h4 ! class_ "modal-title" $ toHtml $ append serviceName " Service Information"
+        div ! class_ "modal-body" $ do
+          h1 "Service Status"
+          statusPingResult $ resultInstancePingResult inst
+          h1 "Status Endpoint"
+          div . urlToAnchor $ resultInstancePingEndpoint inst
+          h1 "Documentation"
+          mapM_ (div . urlToAnchor) $ resultInstanceDocumentation inst
+          h1 "Logs"
+          mapM_ (div . urlToAnchor) $ resultInstanceLogs inst
+          h1 "Healthcheck Status"
+          statusHealthChecks $ resultInstanceHealthCheckResults inst
+          h1 "Information"
+          informationTable $ information inst
+        div ! class_ "modal-footer" $
+          closeButton "Close"
+  where closeButton = button ! type_ "button"
+                             ! class_ "close"
+                             ! dataAttribute "dismiss" "modal"
 
-statusService :: ResultService -> H.Html
+informationTable :: [(Text,Text)] -> Html
+informationTable entries =
+    table $ mconcat $ map informationRow entries
+    where informationRow (key,value) = tr $ do td ! A.style "padding: 5px" $ toHtml key
+                                               td ! A.style "padding: 5px" $ toHtml value
+
+statusService :: ResultService -> Html
 statusService service =
-                  H.div ! class_ "statusTableRow" $ do
-                    H.div ! class_ "statusTableCell" $
-                      H.toHtml $ resServiceName service
-                    mconcat $ map envInst $ resServiceEnvironments service
+                  div ! class_ "statusTableRow" $ do
+                    div ! class_ "statusTableCell" $
+                      toHtml $ resServiceName service
+                    mconcat $ map (envInst $ resServiceName service) $ resServiceEnvironments service
 
-envInst :: ResultEnvironment -> H.Html
-envInst = (H.div ! class_ "statusTableCell") . mconcat . map statusInstance . resultInstances
+envInst :: Text -> ResultEnvironment -> Html
+envInst serviceName = (div ! class_ "statusTableCell") . mconcat . map (statusInstance serviceName) . resultInstances
 
-statusInstance :: ResultInstance -> H.Html
-statusInstance inst = let backgroundColor = if pingSuccessful inst then "LightGreen" else "red"
-                      in H.div ! A.style (toValue ("display: inline-block; width: 105px; height: 40px; background-color: " ++ backgroundColor)) $ do
-                        H.div ! A.style "display: block; width: 16px; float: right" $
-                          documentationInstance $ resultInstanceDocumentation inst
-                        statusPingResult $ resultInstancePingResult inst
-                        statusHealthChecks $ resultInstanceHealthCheckResults inst
+statusInstance :: Text -> ResultInstance -> Html
+statusInstance serviceName inst =
+                      do let boxColour :: Text = if pingSuccessful inst then "greenBackground" else "redBackground"
+                         instanceModal serviceName inst
+                         div ! class_ (toValue (append "instanceBox " boxColour)) $ do
+                           info inst
+                           docs inst
+                           statusHealthChecks $ resultInstanceHealthCheckResults inst
+
+docs inst = mapM_ ((div ! A.style "display: block; width: 16px; float: right") .
+                             documentationInstance) $ resultInstanceDocumentation inst
 
 pingSuccessful :: ResultInstance -> Bool
-pingSuccessful inst = case resultInstancePingResult inst of
+pingSuccessful inst =
+      case resultInstancePingResult inst of
                         HttpCode t | t >= 200  && t <300 -> True
                         _                                -> False
 
-documentationInstance :: Endpoint -> H.Html
-documentationInstance (Endpoint url) = H.a ! href (toValue url) $ H.span mempty ! class_ "glyphicon glyphicon-question-sign"
+info :: ResultInstance -> Html
+info inst =
+  a $
+   span ! dataAttribute "toggle" "modal"
+        ! dataAttribute "target" (toValue $ append "#" (instanceId inst))
+        ! class_ "glyphicon glyphicon-info-sign" $
+     ""
 
-statusPingResult :: PingResult -> H.Html
-statusPingResult = H.div . H.toHtml . show
+documentationInstance :: Endpoint -> Html
+documentationInstance (Endpoint url) = anchor url $
+                                         span mempty ! class_ "glyphicon glyphicon-question-sign"
 
-statusHealthChecks :: [ResultHealthCheck] -> H.Html
-statusHealthChecks = H.div . mconcat . map statusHealthCheck
+urlToAnchor :: Endpoint -> Html
+urlToAnchor (Endpoint url) = anchor url $ text url
 
-statusHealthCheck :: ResultHealthCheck -> H.Html
-statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem (endpointToString $ healthCheckEndpoint healthCheck)) . healthCheckResultItems $ healthCheck
+statusPingResult :: PingResult -> Html
+statusPingResult = span . small . toHtml . show
 
-red :: Text
-red = "color: rgb(255,0,0)"
+statusHealthChecks :: [ResultHealthCheck] -> Html
+statusHealthChecks = (div ! A.style "margin: auto; text-align: center;") . mconcat . map statusHealthCheck
 
-green :: Text
-green = "color: rgb(68,157,68)"
+statusHealthCheck :: ResultHealthCheck -> Html
+statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem (endpointToString $ ResultJson.healthCheckEndpoint healthCheck)) . healthCheckResultItems $ healthCheck
 
-statusHealthCheckItem :: String -> HealthCheckResult -> H.Html
-statusHealthCheckItem url result = H.a ! href (toValue url)
-                                       ! A.title (toValue $ healthCheckItemName $ healthCheckResultItemName result)
-                                       $ H.span mempty
-                                         ! case healthCheckResultItemStatus result of
-                                             Down -> class_ "glyphicon glyphicon-minus-sign" `mappend` A.style (toValue red)
-                                             Up   -> class_ "glyphicon glyphicon-plus" `mappend` A.style (toValue green)
+statusHealthCheckItem :: Text -> HealthCheckResult -> Html
+statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ healthCheckItemName $ healthCheckResultItemName result)
+                                       $ span mempty
+                                         ! class_ (case healthCheckResultItemStatus result of
+                                                     Down -> "glyphicon glyphicon-minus-sign red"
+                                                     Up   -> "glyphicon glyphicon-plus green")
 
---statusHealthCheckItem url result = H.span ! class_ "glyphicon glyphicon-minus-sign" $ H.a "?" ! href (toValue url)
---statusHealthCheckItem :: String -> HealthCheckResult -> H.Html
--- statusHealthCheckItem url result =  H.a (H.span "" ! class_ "glyphicon glyphicon-minus-sign") ! href (toValue url)
 
