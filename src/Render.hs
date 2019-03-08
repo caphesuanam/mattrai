@@ -1,12 +1,12 @@
 module Render where
 
 import Prelude hiding (span, id, div, head)
-import Data.Text (Text,append)
-import Text.Blaze (toValue,(!),preEscapedText)
+import Data.Text (Text, append)
+import Text.Blaze (toValue, (!), preEscapedText)
 import Text.Blaze.Html5 as H hiding (map)
 import Text.Blaze.Html5.Attributes as A hiding (span)
 
-import BlazeUtils (addScript, addStyleSheet, anchor)
+import BlazeUtils (addScript, addStyleSheet, anchor, divClass)
 import CoreDataTypes
 import ResultJson
 
@@ -42,33 +42,33 @@ loadingMessage = h1 "Loading..."
 
 statusHeaderRow :: [Html] -> Html
 statusHeaderRow =
-     (div ! class_ "statusTableRow") .
+     divClass "statusTableRow" .
        mappend (statusHeaderCell "Service") .
                mconcat . map statusHeaderCell
 
 statusHeaderCell :: Html -> Html
-statusHeaderCell = div ! class_ "statusTableCell"
+statusHeaderCell = divClass "statusTableHead"
 
 statusTable :: [Html] -> ResultServices -> Html
 statusTable envKey (ResultServices services) =
-             div ! class_ "statusTable" $ do
+             divClass "statusTable" $ do
                 statusHeaderRow envKey
-                div ! class_ "statusTableBody" $
+                divClass "statusTableBody" $
                   mconcat $ map statusService services
 
 instanceModal :: Text -> ResultInstance -> Html
 instanceModal serviceName inst =
-  div ! class_ "modal fade"
+  divClass "modal fade instanceModal"
       ! id (toValue $ instanceId inst)
       ! tabindex "-1"
       ! role "dialog" $
-    div ! class_ "modal-dialog" $
-      div ! class_ "modal-content" $ do
-        div ! class_ "modal-header" $ do
+    divClass "modal-dialog" $
+      divClass "modal-content" $ do
+        divClass "modal-header" $ do
           closeButton ! dataAttribute "aria-label" "Close" $
             span ! dataAttribute "aria-hidden" "true" $ preEscapedText ("&times;" :: Text)
           h4 ! class_ "modal-title" $ toHtml $ append serviceName " Service Information"
-        div ! class_ "modal-body" $ do
+        divClass "modal-body" $ do
           h1 "Service Status"
           statusPingResult $ resultInstancePingResult inst
           h1 "Status Endpoint"
@@ -81,7 +81,7 @@ instanceModal serviceName inst =
           statusHealthChecks $ resultInstanceHealthCheckResults inst
           h1 "Information"
           informationTable $ information inst
-        div ! class_ "modal-footer" $
+        divClass "modal-footer" $
           closeButton "Close"
   where closeButton = button ! type_ "button"
                              ! class_ "close"
@@ -95,25 +95,24 @@ informationTable entries =
 
 statusService :: ResultService -> Html
 statusService service =
-                  div ! class_ "statusTableRow" $ do
-                    div ! class_ "statusTableCell" $
+                  divClass "statusTableRow" $ do
+                    divClass "statusTableCell serviceHeader" $
                       toHtml $ resServiceName service
                     mconcat $ map (envInst $ resServiceName service) $ resServiceEnvironments service
 
 envInst :: Text -> ResultEnvironment -> Html
-envInst serviceName = (div ! class_ "statusTableCell") . mconcat . map (statusInstance serviceName) . resultInstances
+envInst serviceName = divClass "statusTableCell" . mconcat . map (statusInstance serviceName) . resultInstances
 
 statusInstance :: Text -> ResultInstance -> Html
 statusInstance serviceName inst =
                       do let boxColour :: Text = if pingSuccessful inst then "greenBackground" else "redBackground"
                          instanceModal serviceName inst
-                         div ! class_ (toValue (append "instanceBox " boxColour)) $ do
+                         divClass (toValue (append "instanceBox " boxColour)) $ do
                            info inst
                            docs inst
                            statusHealthChecks $ resultInstanceHealthCheckResults inst
 
-docs inst = mapM_ ((div ! A.style "display: block; width: 16px; float: right") .
-                             documentationInstance) $ resultInstanceDocumentation inst
+docs = mapM_ (divClass "docsButton" . documentationInstance) . resultInstanceDocumentation
 
 pingSuccessful :: ResultInstance -> Bool
 pingSuccessful inst =
@@ -126,7 +125,7 @@ info inst =
   a $
    span ! dataAttribute "toggle" "modal"
         ! dataAttribute "target" (toValue $ append "#" (instanceId inst))
-        ! class_ "glyphicon glyphicon-info-sign" $
+        ! class_ "infoButton glyphicon glyphicon-info-sign" $
      ""
 
 documentationInstance :: Endpoint -> Html
@@ -140,7 +139,7 @@ statusPingResult :: PingResult -> Html
 statusPingResult = span . small . toHtml . show
 
 statusHealthChecks :: [ResultHealthCheck] -> Html
-statusHealthChecks = (div ! A.style "margin: auto; text-align: center;") . mconcat . map statusHealthCheck
+statusHealthChecks = divClass "healthChecks" . mconcat . map statusHealthCheck
 
 statusHealthCheck :: ResultHealthCheck -> Html
 statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem (endpointToString $ ResultJson.healthCheckEndpoint healthCheck)) . healthCheckResultItems $ healthCheck
@@ -151,5 +150,4 @@ statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ health
                                          ! class_ (case healthCheckResultItemStatus result of
                                                      Down -> "glyphicon glyphicon-minus-sign red"
                                                      Up   -> "glyphicon glyphicon-plus green")
-
 

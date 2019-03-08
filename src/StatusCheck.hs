@@ -13,6 +13,7 @@ import Data.List (isInfixOf)
 import Data.Maybe (fromMaybe, fromJust)
 import Data.Text (Text, pack, unpack, append)
 import Network.HTTP.Client (HttpException(..), HttpExceptionContent(..), defaultManagerSettings, managerResponseTimeout, responseTimeoutMicro)
+import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.Wreq
 import System.Log.Logger (infoM)
 
@@ -22,7 +23,7 @@ info :: Text -> IO()
 info = infoM "Mattrai" . unpack
 
 getter :: Text -> IO (Response ByteString)
-getter = let opts = defaults & manager .~ Left (defaultManagerSettings {managerResponseTimeout = responseTimeoutMicro 1000000})
+getter = let opts = defaults & manager .~ Left (tlsManagerSettings {managerResponseTimeout = responseTimeoutMicro 1000000})
          in getWith opts . unpack
 
 httpErrorHandler (HttpExceptionRequest _ (ConnectionFailure cf))    = if "does not exist" `isInfixOf` displayException cf

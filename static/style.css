@@ -6,22 +6,56 @@
 }*/
 .statusTable {
   display: table;
-  width: 100%
+  width: 100%;
+  border-collapse: collapse;
+  border-bottom: 4px solid #333333;
 }
+.serviceHeader {
+  font-size: 18px;
+}
+
+.instanceModal {
+  text-align: left;
+}
+
+.docsButton {
+  text-align: center;
+  display: block;
+  width: 16px;
+  float: right
+}
+
+.healthChecks {
+  margin: auto;
+  text-align: center;
+}
+
+.infoButton {
+  text-align: center;
+  float: left;
+}
+
 .statusTableBody{
   display: table-row-group;
 }
 .statusTableRow {
   display: table-row;
 }
-.statusTableHeading {
+.statusTableHead {
   display: table-header-group
+  font-size: 15px;
+  font-weight: bold;
+  border-bottom: 4px solid #333333;
 }
 .statusTableCell, .statusTableHead {
-  border: 1px solid #999999;
+  // border: 1px solid #FFFFFF;
   display: table-cell;
   padding: 4px 12px;
   vertical-align: middle;
+  text-align: center;
+}
+.statusTableCell {
+  border-bottom: 1px solid #333333;
 }
 
 .instanceBox {
