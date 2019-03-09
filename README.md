@@ -10,7 +10,9 @@ An eye on all your services. Mattrai is a dashboard that shows services deployed
 1. `mkdir conf`
 1. `touch /conf/Conf.hs`
 1. Enter the following in `/conf/Conf.hs`:
-```module Config where
+
+```
+module Config where
 
 import CoreDataTypes
 import Data.Text (Text)
@@ -65,7 +67,9 @@ services =
     }
   ]
 ```
+
 1. Then run
+
 ```docker run -p 8080:8000 -t mattrai caphesuanam/mattrai```
 
 1. Open `0.0.0.0:8080` in your browser
