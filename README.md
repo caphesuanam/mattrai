@@ -8,8 +8,8 @@ An eye on all your services. Mattrai is a dashboard that shows services deployed
 
 ## Getting Started
 1. `mkdir conf`
-1. `touch /conf/Conf.hs`
-1. Enter the following in `/conf/Conf.hs`:
+1. `touch conf/Config.hs`
+1. Enter the following in `conf/Config.hs`:
 
 ```
 module Config where
@@ -70,9 +70,13 @@ services =
 
 1. Then run
 
-```docker run -p 8080:8000 -t mattrai caphesuanam/mattrai```
+```docker run -d -p 8080:8000 -v `pwd`/conf:/service/conf --name mattrai caphesuanam/mattrai```
 
-1. Open `0.0.0.0:8080` in your browser
+1. Wait about 10 seconds.
+
+1. Open `http://0.0.0.0:8080` in your browser
+
+1. You can monitor progress with `docker logs mattrai` if things are a bit slow or if something went wrong.
 
 ## Quick reference
 
