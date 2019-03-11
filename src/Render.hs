@@ -1,4 +1,5 @@
-module Render where
+module Render (topLevelPage, report)
+where
 
 import Prelude hiding (span, id, div, head)
 import Data.Text (Text, append)
@@ -13,25 +14,26 @@ import ResultJson
 
 topLevelPage :: [Text] -> ResultServices -> Html
 topLevelPage envKey result =
-    html $ do
-      head $ do
-        H.title "Mattrai"
-        addStyleSheet "static/style.css"
-        meta ! charset "utf-8"
-        meta ! name "viewport"
-             ! content "width=device-width, initial-scale=1, shrink-to-fit=no"
-        addStyleSheet "https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css"
-        addScript "http://code.jquery.com/jquery-1.9.1.js"
-        addScript "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js"
-        script "$(function () { $('[data-toggle=\"tooltip\"]').tooltip() })"
-        addScript "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" -- Bootstrap Tooltips
-        addScript "/static/eng.js"
-      body $
-        div ! id "bg" $
-          if isLoading result then
-             loadingMessage
-          else
-            statusTable (map toHtml envKey) result
+    htmlFrameWork $ do
+      do div ! id "bg" $
+           if isLoading result then
+              loadingMessage
+           else
+             statusTable (map toHtml envKey) result
+
+commonHeader :: Html
+commonHeader = head $ do
+           H.title "Mattrai"
+           addStyleSheet "static/style.css"
+           meta ! charset "utf-8"
+           meta ! name "viewport"
+                ! content "width=device-width, initial-scale=1, shrink-to-fit=no"
+           addStyleSheet "https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css"
+           addScript "http://code.jquery.com/jquery-1.9.1.js"
+           addScript "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js"
+           script "$(function () { $('[data-toggle=\"tooltip\"]').tooltip() })"
+           addScript "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" -- Bootstrap Tooltips
+           addScript "/static/eng.js"
 
 isLoading :: ResultServices -> Bool
 isLoading (ResultServices []) = True
@@ -68,36 +70,30 @@ instanceModal serviceName inst =
           closeButton ! dataAttribute "aria-label" "Close" $
             span ! dataAttribute "aria-hidden" "true" $ preEscapedText ("&times;" :: Text)
           h4 ! class_ "modal-title" $ toHtml $ append serviceName " Service Information"
-        divClass "modal-body" $ do
-          h1 "Service Status"
-          statusPingResult $ resultInstancePingResult inst
-          h1 "Status Endpoint"
-          div . urlToAnchor $ resultInstancePingEndpoint inst
-          if not $ null $ resultInstanceDocumentation inst then
-            do h1 "Documentation"
-               mapM_ (div . urlToAnchor) $ resultInstanceDocumentation inst
-          else
-            mempty
-          if not $ null $ resultInstanceLogs inst then
-            do h1 "Logs"
-               mapM_ (div . urlToAnchor) $ resultInstanceLogs inst
-          else
-            mempty
-          if not $ null $ resultInstanceHealthCheckResults inst then
-            do h1 "Healthcheck Status"
-               statusHealthChecks $ resultInstanceHealthCheckResults inst
-          else
-            mempty
-          if not $ null $ information inst then
-            do h1 "Information"
-               informationTable $ information inst
-          else
-            mempty
+        divClass "modal-body" $
+          instanceInformation inst
         divClass "modal-footer" $
           closeButton "Close"
   where closeButton = button ! type_ "button"
                              ! class_ "close"
                              ! dataAttribute "dismiss" "modal"
+
+instanceInformation :: ResultInstance -> Html
+instanceInformation inst =
+       let optionalSection name formatter accessor = if not $ null $ accessor inst then
+                                                       do h3 name
+                                                          formatter $ accessor inst
+                                                     else
+                                                       mempty
+       in do h3 "Service Status"
+             statusPingResult $ resultInstancePingResult inst
+             h3 "Status Endpoint"
+             div . urlToAnchor $ resultInstancePingEndpoint inst
+             optionalSection "Documentation" (mapM_ (div . urlToAnchor)) resultInstanceDocumentation
+             optionalSection "Logs" (mapM_ (div . urlToAnchor)) resultInstanceLogs
+             optionalSection "Healthcheck Status" statusHealthChecks resultInstanceHealthCheckResults
+             optionalSection "Information" informationTable information
+
 
 informationTable :: [(Text,Text)] -> Html
 informationTable entries =
@@ -134,7 +130,7 @@ pingSuccessful inst =
 
 info :: ResultInstance -> Html
 info inst =
-  a $
+  a ! target "_blank" $
    span ! dataAttribute "toggle" "modal"
         ! dataAttribute "target" (toValue $ append "#" (instanceId inst))
         ! class_ "infoButton glyphicon glyphicon-info-sign" $
@@ -162,4 +158,27 @@ statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ health
                                          ! class_ (case healthCheckResultItemStatus result of
                                                      Down -> "glyphicon glyphicon-minus-sign red"
                                                      Up   -> "glyphicon glyphicon-plus green")
+
+report :: ResultServices -> Html
+report (ResultServices services) = htmlFrameWork $ mapM_ reportService services
+
+htmlFrameWork :: Html -> Html
+htmlFrameWork theBody = html $ do commonHeader
+                                  body $
+                                    do theBody
+                                       pageFooter
+
+reportService :: ResultService -> Html
+reportService service = do h2 $ toHtml $ resServiceName service
+                           mapM_ reportEnvironment (resServiceEnvironments service)
+
+reportEnvironment :: ResultEnvironment -> Html
+reportEnvironment env = if null $ resultInstances env then
+                          mempty
+                        else
+                          do h3 $ toHtml $ resultEnvironmentName env
+                             mapM_ instanceInformation $ resultInstances env
+
+pageFooter :: Html
+pageFooter = divClass "footer" $ anchor "https://github.com/caphesuanam/mattrai" "Mattrai"
 

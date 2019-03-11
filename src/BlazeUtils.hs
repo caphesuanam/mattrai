@@ -15,7 +15,7 @@ addStyleSheet name = link ! rel "stylesheet"
                           ! href name
 
 anchor :: Text -> Html -> Html
-anchor url = a ! href (toValue url)
+anchor url = a ! href (toValue url) ! target "_blank"
 
 divClass :: AttributeValue -> Html -> Html
 divClass c = div ! class_ c

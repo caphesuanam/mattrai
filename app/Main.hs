@@ -5,6 +5,7 @@ import           Control.Concurrent         (forkIO, threadDelay)
 import qualified Control.Monad.Parallel as Par (mapM)
 import Happstack.Server ( simpleHTTP, nullConf, ok, toResponse, serveDirectory, dir)
 import Happstack.Server.FileServe (Browsing(DisableBrowsing))
+import Happstack.Server.Routing (nullDir)
 import           Text.Blaze ((!))
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
@@ -24,7 +25,7 @@ import System.Log.Logger ( updateGlobalLogger
 
 import Config
 import CoreDataTypes
-import Render (topLevelPage)
+import Render (topLevelPage, report)
 import ResultJson
 import StatusCheck (healthCheckStatus, ping)
 
@@ -124,7 +125,9 @@ main = do let sixtySeconds = 60000000
             msum [
                    dir "static" $ serveDirectory DisableBrowsing [] "static"
                  -- , liftIO results >>= ok . toResponse . topLevelPage (allEnvironments services)
-                 , liftIO (readIORef ref) >>= ok . toResponse . topLevelPage (allEnvironments' {-services-})
+                 , dir "report" $ liftIO (readIORef ref) >>= ok . toResponse . report
+                 , do nullDir
+                      liftIO (readIORef ref) >>= ok . toResponse . topLevelPage (allEnvironments' {-services-})
                  ]
 
 -- http://vtp-la-int.ttdev.cosmic.sky/legacy-adapter-app/health

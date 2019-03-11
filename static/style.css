@@ -1,9 +1,9 @@
-/*body {
-  background-image: url("/static/eye-l.jpg");
+body {
+  background-image: url("/static/transparenteye.png");
   background-position: center;
   background-repeat: no-repeat;
-  background-size: cover;
-}*/
+  background-size: 20%
+}
 .statusTable {
   display: table;
   width: 100%;
@@ -78,4 +78,9 @@
 
 .green {
   color: rgb(68,157,68)
+}
+
+.footer {
+  width: 100%;
+  text-align: center;
 }
