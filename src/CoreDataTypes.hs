@@ -1,12 +1,14 @@
+{-# LANGUAGE RankNTypes, TemplateHaskell #-}
 module CoreDataTypes where
 
-import Data.Aeson (ToJSON, toJSON, object, (.=))
+import Control.Lens
+--import Data.Aeson (ToJSON, toJSON, object, (.=))
 import Data.Hashable (Hashable)
 import Data.Text (Text)
 import GHC.Generics
 
 newtype Endpoint = Endpoint Text deriving (Show, Eq, Generic)
-instance ToJSON Endpoint
+--instance ToJSON Endpoint
 instance Hashable Endpoint
 
 endpointToString (Endpoint s) = s
@@ -15,15 +17,15 @@ data HealthCheckResult = HealthCheckResult {
   healthCheckResultItemName   :: HealthCheckItem
 , healthCheckResultItemStatus :: HealthCheckItemStatus
 } deriving (Show)
-instance ToJSON HealthCheckResult where
-  toJSON (HealthCheckResult name status) =
-    object [
-             "name"   .= name
-           , "status" .= status
-           ]
+--instance ToJSON HealthCheckResult where
+--  toJSON (HealthCheckResult name status) =
+--    object [
+--             "name"   .= name
+--           , "status" .= status
+--           ]
 
 newtype HealthCheckItem = HealthCheckItem Text deriving (Show, Generic)
-instance ToJSON HealthCheckItem
+--instance ToJSON HealthCheckItem
 
 healthCheckItemName :: HealthCheckItem -> Text
 healthCheckItemName (HealthCheckItem i) = i
@@ -32,7 +34,7 @@ healthCheckItemName (HealthCheckItem i) = i
 data HealthCheckItemStatus = Up
                            | Down
                            deriving (Generic, Show)
-instance ToJSON HealthCheckItemStatus
+--instance ToJSON HealthCheckItemStatus
 
 data PingResult = Timeout
                 | CannotConnect
@@ -42,13 +44,13 @@ data PingResult = Timeout
                 | OtherFailure Text
                 | HttpCode Int
                 deriving (Show, Eq)
-instance ToJSON PingResult where
-  toJSON stat =
-    let base = [ "status" .= if success then "Up" :: Text else "Down" ]
-        success = case stat of
-                    HttpCode n | n >= 200 && n < 300 -> True
-                    _                                -> False
-    in object $ if success then base else "reason" .= show stat : base
+-- instance ToJSON PingResult where
+--   toJSON stat =
+--     let base = [ "status" .= if success then "Up" :: Text else "Down" ]
+--         success = case stat of
+--                     HttpCode n | n >= 200 && n < 300 -> True
+--                     _                                -> False
+--     in object $ if success then base else "reason" .= show stat : base
 
 
 --
@@ -87,6 +89,9 @@ data Service'' = Service {
   serName      :: ServiceName
 , serInstances :: [Instance]
 }
+
+makeLenses ''Service''
+
 docsEndpoint :: Text -> MiscEndpoint
 docsEndpoint = DocsEndpoint . Endpoint
 
