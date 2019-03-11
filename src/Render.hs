@@ -73,14 +73,26 @@ instanceModal serviceName inst =
           statusPingResult $ resultInstancePingResult inst
           h1 "Status Endpoint"
           div . urlToAnchor $ resultInstancePingEndpoint inst
-          h1 "Documentation"
-          mapM_ (div . urlToAnchor) $ resultInstanceDocumentation inst
-          h1 "Logs"
-          mapM_ (div . urlToAnchor) $ resultInstanceLogs inst
-          h1 "Healthcheck Status"
-          statusHealthChecks $ resultInstanceHealthCheckResults inst
-          h1 "Information"
-          informationTable $ information inst
+          if not $ null $ resultInstanceDocumentation inst then
+            do h1 "Documentation"
+               mapM_ (div . urlToAnchor) $ resultInstanceDocumentation inst
+          else
+            mempty
+          if not $ null $ resultInstanceLogs inst then
+            do h1 "Logs"
+               mapM_ (div . urlToAnchor) $ resultInstanceLogs inst
+          else
+            mempty
+          if not $ null $ resultInstanceHealthCheckResults inst then
+            do h1 "Healthcheck Status"
+               statusHealthChecks $ resultInstanceHealthCheckResults inst
+          else
+            mempty
+          if not $ null $ information inst then
+            do h1 "Information"
+               informationTable $ information inst
+          else
+            mempty
         divClass "modal-footer" $
           closeButton "Close"
   where closeButton = button ! type_ "button"
