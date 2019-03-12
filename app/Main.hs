@@ -93,6 +93,7 @@ mapInstanceToResultInstance inst = do
       , resultInstanceDocumentation = map getEndpoint $ filter isDoc $ miscEndpoints inst
       , resultInstanceLogs          = map getEndpoint $ filter isLog $ miscEndpoints inst
       , resultInstanceHealthCheckResults = bHealthCheckResult
+      , resultInstanceMiscEndpoints = map (\misc -> (getMiscEndpointName misc, getEndpoint misc)) $ filter isMisc $ miscEndpoints inst
       , information = staticInfo inst
       }
 

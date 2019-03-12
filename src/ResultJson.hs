@@ -26,6 +26,7 @@ data ResultInstance = ResultInstance {
 , resultInstancePingResult           :: PingResult
 , resultInstanceDocumentation        :: [Endpoint]
 , resultInstanceLogs                 :: [Endpoint]
+, resultInstanceMiscEndpoints        :: [(Text,Endpoint)]
 , resultInstanceHealthCheckResults   :: [ResultHealthCheck]
 , information                        :: [(Text,Text)]
 }

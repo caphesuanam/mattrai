@@ -1,8 +1,18 @@
-body {
-  background-image: url("/static/transparenteye.png");
+// body {
+//   background-size: 20%
+// }
+.back {
+  position: fixed;
+  width: 24%;
+  height: 100%;
+  left: 50%;
+  transform: translate(-50%, 0);
+
+  background-color: white;
+  background: url("/static/transparenteye.png");
   background-position: center;
   background-repeat: no-repeat;
-  background-size: 20%
+  background-size: contain;
 }
 .statusTable {
   display: table;

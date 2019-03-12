@@ -3,6 +3,7 @@ where
 
 import Prelude hiding (span, id, div, head)
 import Data.Text (Text, append)
+import Data.Tuple(fst,snd)
 import Text.Blaze (toValue, (!), preEscapedText)
 import Text.Blaze.Html5 as H hiding (map)
 import Text.Blaze.Html5.Attributes as A hiding (span)
@@ -92,8 +93,12 @@ instanceInformation inst =
              optionalSection "Documentation" (mapM_ (div . urlToAnchor)) resultInstanceDocumentation
              optionalSection "Logs" (mapM_ (div . urlToAnchor)) resultInstanceLogs
              optionalSection "Healthcheck Status" statusHealthChecks resultInstanceHealthCheckResults
+             optionalSection "Other Endpoints" (mapM_ (\(name, endpoint) -> miscEndpointEntry name endpoint)) resultInstanceMiscEndpoints
              optionalSection "Information" informationTable information
 
+miscEndpointEntry :: Text -> Endpoint -> Html
+miscEndpointEntry name val = div $ do (toHtml (name `mappend` ": "))
+                                      urlToAnchor val
 
 informationTable :: [(Text,Text)] -> Html
 informationTable entries =
@@ -165,7 +170,8 @@ report (ResultServices services) = htmlFrameWork $ mapM_ reportService services
 htmlFrameWork :: Html -> Html
 htmlFrameWork theBody = html $ do commonHeader
                                   body $
-                                    do theBody
+                                    do divClass "back" $ mempty
+                                       theBody
                                        pageFooter
 
 reportService :: ResultService -> Html

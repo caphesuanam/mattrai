@@ -1,6 +1,7 @@
 {-# LANGUAGE RankNTypes, TemplateHaskell #-}
 module CoreDataTypes where
 
+
 import Control.Lens
 --import Data.Aeson (ToJSON, toJSON, object, (.=))
 import Data.Hashable (Hashable)
@@ -80,7 +81,7 @@ data Instance = Instance {
 , staticInfo               :: [(Text, Text)]
 }
 
-data MiscEndpoint = MiscEndpoint String Endpoint
+data MiscEndpoint = MiscEndpoint Text Endpoint
                   | LogsEndpoint Endpoint
                   | DocsEndpoint Endpoint
                   | HealthCheckEndpoint Endpoint
@@ -107,8 +108,14 @@ isHealthcheck _                       = False
 isLog (LogsEndpoint _) = True
 isLog _                = False
 
+isMisc (MiscEndpoint _ _) = True
+isMisc _                  = False
+
 getEndpoint (DocsEndpoint ep) = ep
 getEndpoint (HealthCheckEndpoint ep) = ep
 getEndpoint (LogsEndpoint ep) = ep
+getEndpoint (MiscEndpoint _ ep) = ep
+
+getMiscEndpointName (MiscEndpoint name _) = name
 
 (-->) = (,)
