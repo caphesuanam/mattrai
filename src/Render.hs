@@ -186,5 +186,7 @@ reportEnvironment env = if null $ resultInstances env then
                              mapM_ instanceInformation $ resultInstances env
 
 pageFooter :: Html
-pageFooter = divClass "footer" $ anchor "https://github.com/caphesuanam/mattrai" "Mattrai"
+pageFooter = divClass "footer" $ do span $ anchor "https://github.com/caphesuanam/mattrai" "Mattrai"
+                                    span $ toHtml (" | " :: Text)
+                                    span $ anchor "/report" "report"
 

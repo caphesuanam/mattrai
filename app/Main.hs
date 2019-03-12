@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Main where
 
 
@@ -109,7 +110,6 @@ mapHealthCheckEndpointToResult endpoint =
 main :: IO ()
 main = do let sixtySeconds = 60000000
           updateGlobalLogger rootLoggerName (setLevel INFO)
-          -- initialValue <- emptyResultServices
 
           ref <- emptyResultServices
           _ <- forkIO $
@@ -117,18 +117,11 @@ main = do let sixtySeconds = 60000000
                      threadDelay sixtySeconds
                      return ()
 
-          -- results <- mkAutoUpdate defaultUpdateSettings {
-          --   updateAction = mapServicesToJSON' initialValue
-          -- , updateFreq = tenSeconds
-          -- }
-
           simpleHTTP nullConf $
             msum [
                    dir "static" $ serveDirectory DisableBrowsing [] "static"
-                 -- , liftIO results >>= ok . toResponse . topLevelPage (allEnvironments services)
-                 , dir "report" $ liftIO (readIORef ref) >>= ok . toResponse . report
-                 , do nullDir
-                      liftIO (readIORef ref) >>= ok . toResponse . topLevelPage (allEnvironments' {-services-})
+                 , dir "report" $ displayResultPage ref report
+                 , nullDir >> (displayResultPage ref $ topLevelPage allEnvironments')
                  ]
+           where displayResultPage ref renderer = liftIO (readIORef ref) >>= ok . toResponse . renderer
 
--- http://vtp-la-int.ttdev.cosmic.sky/legacy-adapter-app/health
