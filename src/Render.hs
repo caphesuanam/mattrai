@@ -2,7 +2,7 @@ module Render (topLevelPage, report)
 where
 
 import Prelude hiding (span, id, div, head)
-import Data.Text (Text, append)
+import Data.Text (Text, append, pack)
 import Data.Tuple(fst,snd)
 import Text.Blaze (toValue, (!), preEscapedText)
 import Text.Blaze.Html5 as H hiding (map)
@@ -20,7 +20,8 @@ topLevelPage envKey result =
            if isLoading result then
               loadingMessage
            else
-             statusTable (map toHtml envKey) result
+             do statusTable (map toHtml envKey) result
+                pageFooter
 
 commonHeader :: Html
 commonHeader = head $ do
@@ -92,7 +93,8 @@ instanceInformation inst =
              div . urlToAnchor $ resultInstancePingEndpoint inst
              optionalSection "Documentation" (mapM_ (div . urlToAnchor)) resultInstanceDocumentation
              optionalSection "Logs" (mapM_ (div . urlToAnchor)) resultInstanceLogs
-             optionalSection "Healthcheck Status" statusHealthChecks resultInstanceHealthCheckResults
+             --optionalSection "Healthcheck Status" statusHealthChecks resultInstanceHealthCheckResults
+             optionalSection "Healthcheck Status" statusHealthCheckTable resultInstanceHealthCheckResults
              optionalSection "Other Endpoints" (mapM_ (\(name, endpoint) -> miscEndpointEntry name endpoint)) resultInstanceMiscEndpoints
              optionalSection "Information" informationTable information
 
@@ -154,6 +156,21 @@ statusPingResult = span . small . toHtml . show
 statusHealthChecks :: [ResultHealthCheck] -> Html
 statusHealthChecks = divClass "healthChecks" . mconcat . map statusHealthCheck
 
+statusHealthCheckTable :: [ResultHealthCheck] -> Html
+statusHealthCheckTable = mapM_ (\h -> do div . urlToAnchor . ResultJson.healthCheckEndpoint $ h
+                                         statusHealthCheckRows $ healthCheckResultItems h)
+
+
+statusHealthCheckRows :: [HealthCheckResult] -> Html
+statusHealthCheckRows results = divClass "healthcheckTable table-sm" $ mapM_ statusHealthCheckRow results
+
+statusHealthCheckRow :: HealthCheckResult -> Html
+statusHealthCheckRow (HealthCheckResult (HealthCheckItem name) status) =
+    divClass "healthcheckRow" $ do
+      divClass "healthcheckCell" $ divClass "healthCheckItemName" $ toHtml name
+      divClass "healthcheckCell" $ toHtml $ pack $ show status
+
+
 statusHealthCheck :: ResultHealthCheck -> Html
 statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem (endpointToString $ ResultJson.healthCheckEndpoint healthCheck)) . healthCheckResultItems $ healthCheck
 
@@ -162,7 +179,7 @@ statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ health
                                        $ span mempty
                                          ! class_ (case healthCheckResultItemStatus result of
                                                      Down -> "glyphicon glyphicon-minus-sign red"
-                                                     Up   -> "glyphicon glyphicon-plus green")
+                                                     Up   -> "glyphicon glyphicon-ok green")
 
 report :: ResultServices -> Html
 report (ResultServices services) = htmlFrameWork $ mapM_ reportService services
@@ -172,7 +189,7 @@ htmlFrameWork theBody = html $ do commonHeader
                                   body $
                                     do divClass "back" $ mempty
                                        theBody
-                                       pageFooter
+                                       --pageFooter
 
 reportService :: ResultService -> Html
 reportService service = do h2 $ toHtml $ resServiceName service
