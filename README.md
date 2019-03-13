@@ -45,6 +45,8 @@ services =
         , instPingEndpoint    = Endpoint "http://google.com"
         , miscEndpoints = [
             DocsEndpoint $ Endpoint "https://about.google"
+          , LogsEndpoint $ Endpoint "http://google.com?q=logs"
+          , MiscEndpoint "Business Verification" (Endpoint "https://google.com/verifymybusiness")
           ]
         , staticInfo    = [
             "description" --> "Use to find stuff"
