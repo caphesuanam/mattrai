@@ -12,9 +12,11 @@ import Data.HashMap.Strict (keys, HashMap(..), empty, lookup, fromList)
 import Data.List (isInfixOf)
 import Data.Maybe (fromMaybe, fromJust)
 import Data.Text (Text, pack, unpack, append)
-import Network.HTTP.Client (HttpException(..), HttpExceptionContent(..), defaultManagerSettings, managerResponseTimeout, responseTimeoutMicro)
-import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Network.Connection (TLSSettings(..))
+import Network.HTTP.Client (Manager, HttpException(..), HttpExceptionContent(..), defaultManagerSettings, managerResponseTimeout, responseTimeoutMicro, newManager)
+import Network.HTTP.Client.TLS (tlsManagerSettings, mkManagerSettings, newTlsManagerWith,mkManagerSettingsContext)
 import Network.Wreq
+import Network.TLS (ClientParams(ClientParams))
 import System.Log.Logger (infoM)
 
 import CoreDataTypes
@@ -23,7 +25,14 @@ info :: Text -> IO()
 info = infoM "Mattrai" . unpack
 
 getter :: Text -> IO (Response ByteString)
-getter = let opts = defaults & manager .~ Left (tlsManagerSettings {managerResponseTimeout = responseTimeoutMicro 1000000})
+getter = let opts = defaults & manager .~ Left (tlsManagerSettings { managerResponseTimeout = responseTimeoutMicro 1000000
+                                                                   {-, settingDisableCertificateValidation = True-}})
+                             & manager .~ Left (mkManagerSettingsContext Nothing
+                                                                         (TLSSettingsSimple {
+                                                                           settingDisableCertificateValidation = True,
+                                                                           settingDisableSession=False,
+                                                                           settingUseServerName=True})
+                                                                         Nothing)
          in getWith opts . unpack
 
 httpErrorHandler (HttpExceptionRequest _ (ConnectionFailure cf))    = if "does not exist" `isInfixOf` displayException cf

@@ -20,8 +20,7 @@ topLevelPage envKey result =
            if isLoading result then
               loadingMessage
            else
-             do statusTable (map toHtml envKey) result
-                pageFooter
+             statusTable (map toHtml envKey) result
 
 commonHeader :: Html
 commonHeader = head $ do
@@ -80,23 +79,24 @@ instanceModal serviceName inst =
                              ! class_ "close"
                              ! dataAttribute "dismiss" "modal"
 
+optionalSection inst name formatter accessor = if not $ null $ accessor inst then
+                                                 do h3 name
+                                                    formatter $ accessor inst
+                                               else
+                                                 mempty
+
 instanceInformation :: ResultInstance -> Html
 instanceInformation inst =
-       let optionalSection name formatter accessor = if not $ null $ accessor inst then
-                                                       do h3 name
-                                                          formatter $ accessor inst
-                                                     else
-                                                       mempty
-       in do h3 "Service Status"
-             statusPingResult $ resultInstancePingResult inst
-             h3 "Status Endpoint"
-             div . urlToAnchor $ resultInstancePingEndpoint inst
-             optionalSection "Documentation" (mapM_ (div . urlToAnchor)) resultInstanceDocumentation
-             optionalSection "Logs" (mapM_ (div . urlToAnchor)) resultInstanceLogs
-             --optionalSection "Healthcheck Status" statusHealthChecks resultInstanceHealthCheckResults
-             optionalSection "Healthcheck Status" statusHealthCheckTable resultInstanceHealthCheckResults
-             optionalSection "Other Endpoints" (mapM_ (\(name, endpoint) -> miscEndpointEntry name endpoint)) resultInstanceMiscEndpoints
-             optionalSection "Information" informationTable information
+    let optional = optionalSection inst
+    in do h3 "Service Status"
+          statusPingResult $ resultInstancePingResult inst
+          h3 "Status Endpoint"
+          div . urlToAnchor $ resultInstancePingEndpoint inst
+          optional "Documentation" (mapM_ (div . urlToAnchor)) resultInstanceDocumentation
+          optional "Logs" (mapM_ (div . urlToAnchor)) resultInstanceLogs
+          optional "Healthcheck Status" statusHealthCheckTable resultInstanceHealthCheckResults
+          optional "Other Endpoints" (mapM_ (\(name, endpoint) -> miscEndpointEntry name endpoint)) resultInstanceMiscEndpoints
+          optional "Information" informationTable information
 
 miscEndpointEntry :: Text -> Endpoint -> Html
 miscEndpointEntry name val = div $ do (toHtml (name `mappend` ": "))
@@ -162,7 +162,7 @@ statusHealthCheckTable = mapM_ (\h -> do div . urlToAnchor . ResultJson.healthCh
 
 
 statusHealthCheckRows :: [HealthCheckResult] -> Html
-statusHealthCheckRows results = divClass "healthcheckTable table-sm" $ mapM_ statusHealthCheckRow results
+statusHealthCheckRows = divClass "healthcheckTable" . mapM_ statusHealthCheckRow
 
 statusHealthCheckRow :: HealthCheckResult -> Html
 statusHealthCheckRow (HealthCheckResult (HealthCheckItem name) status) =
@@ -172,7 +172,7 @@ statusHealthCheckRow (HealthCheckResult (HealthCheckItem name) status) =
 
 
 statusHealthCheck :: ResultHealthCheck -> Html
-statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem (endpointToString $ ResultJson.healthCheckEndpoint healthCheck)) . healthCheckResultItems $ healthCheck
+statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem $ endpointToString $ ResultJson.healthCheckEndpoint healthCheck) . healthCheckResultItems $ healthCheck
 
 statusHealthCheckItem :: Text -> HealthCheckResult -> Html
 statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ healthCheckItemName $ healthCheckResultItemName result)
@@ -189,18 +189,14 @@ htmlFrameWork theBody = html $ do commonHeader
                                   body $
                                     do divClass "back" $ mempty
                                        theBody
-                                       --pageFooter
+                                       pageFooter
 
 reportService :: ResultService -> Html
 reportService service = do h2 $ toHtml $ resServiceName service
                            mapM_ reportEnvironment (resServiceEnvironments service)
 
 reportEnvironment :: ResultEnvironment -> Html
-reportEnvironment env = if null $ resultInstances env then
-                          mempty
-                        else
-                          do h3 $ toHtml $ resultEnvironmentName env
-                             mapM_ instanceInformation $ resultInstances env
+reportEnvironment env = optionalSection env (toHtml $ resultEnvironmentName env) (mapM_ instanceInformation) resultInstances
 
 pageFooter :: Html
 pageFooter = divClass "footer" $ do span $ anchor "https://github.com/caphesuanam/mattrai" "Mattrai"
