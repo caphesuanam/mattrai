@@ -199,7 +199,7 @@ reportEnvironment :: ResultEnvironment -> Html
 reportEnvironment env = optionalSection env (toHtml $ resultEnvironmentName env) (mapM_ instanceInformation) resultInstances
 
 pageFooter :: Html
-pageFooter = divClass "footer" $ do span $ anchor "https://github.com/caphesuanam/mattrai" "Mattrai"
+pageFooter = divClass "footer" $ do span $ anchor "https://github.com/caphesuanong/mattrai" "Mattrai"
                                     span $ toHtml (" | " :: Text)
                                     span $ anchor "/report" "report"
 

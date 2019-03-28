@@ -6,7 +6,7 @@ An eye on all your services. Mattrai is a dashboard that shows services deployed
 * Ping Endpoints to confirm a service is up
 * Any Meta information yuo desire, e.g. team names, identifiers, descriptions etc.
 
-![Pings occur periodically regardless of calls to the service](https://raw.githubusercontent.com/caphesuanam/mattrai/master/docs/mattrai.png)
+![Pings occur periodically regardless of calls to the service](https://raw.githubusercontent.com/caphesuanong/mattrai/master/docs/mattrai.png)
 
 
 ## Getting Started
@@ -86,6 +86,6 @@ services =
 ## Quick reference
 
 * Where to file issues:
-https://github.com/caphesuanam/mattrai/issues
+https://github.com/caphesuanong/mattrai/issues
 
 
