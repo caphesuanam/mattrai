@@ -75,7 +75,7 @@ services =
 
 1. Then run
 
-```docker run -d -p 8080:8000 -v `pwd`/conf:/service/conf --name mattrai caphesuanam/mattrai```
+```docker run -d -p 8080:8000 -v `pwd`/conf:/service/conf --name mattrai caphesuanong/mattrai```
 
 1. Wait about 10 seconds.
 
