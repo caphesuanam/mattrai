@@ -49,22 +49,30 @@ healthCheckStatus (Endpoint url) = do
   payload <- wrapLog (append "Healthcheck check: " url) $
       catch (Just <$> getter url)
             $ \(_ :: HttpException) -> return Nothing
-  let kys = maybe []
-                  (filter (/= "status") .
-                  keys .
-                  (\(Object o) -> o) .
-                  fromJust .
-                  lookup ("details" :: Text).
-                  fromMaybe empty .
-                  decode .
-                  (^. responseBody))
-                     payload
+  let kys1 = maybe []
+                   (filter (/= "status") .
+                   keys .
+                   (\(Object o) -> o) .
+                   fromMaybe (Object empty) .
+                   lookup ("details" :: Text).
+                   fromMaybe empty .
+                   decode .
+                   (^. responseBody))
+                      payload
+  let kys2 = maybe []
+                   (filter (/= "status") .
+                   keys .
+                   (\(Object o) -> o) .
+                   fromMaybe (Object empty) .
+                   decode .
+                   (^. responseBody))
+                      payload
   let getServiceUpStatus ky =
         case payload of
           Just t
             | Just "UP" == decode (t ^. responseBody) ^. key "details" . key ky . key "status" . asText -> Up
           _ -> Down
-  return $ map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus t)) kys
+  return $ map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus t)) (kys1 ++ kys2)
 
 ping :: Endpoint -> IO PingResult
 ping (Endpoint url) =
