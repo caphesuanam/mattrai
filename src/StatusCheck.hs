@@ -60,7 +60,7 @@ healthCheckStatus (Endpoint url) = do
                    (^. responseBody))
                       payload
   let kys2 = maybe []
-                   (filter (/= "status") .
+                   (filter (\x -> (x /= "details") && (x /= "status")) .
                    keys .
                    (\(Object o) -> o) .
                    fromMaybe (Object empty) .
@@ -72,7 +72,14 @@ healthCheckStatus (Endpoint url) = do
           Just t
             | Just "UP" == decode (t ^. responseBody) ^. key "details" . key ky . key "status" . asText -> Up
           _ -> Down
-  return $ map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus t)) (kys1 ++ kys2)
+  let getServiceUpStatus2 ky =
+        case payload of
+          Just t
+            | Just "UP" == decode (t ^. responseBody) ^. key ky . key "status" . asText -> Up
+          _ -> Down
+  let z1 = map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus t)) kys1
+  let z2 = map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus2 t)) kys2
+  return $ z1 ++ z2
 
 ping :: Endpoint -> IO PingResult
 ping (Endpoint url) =
