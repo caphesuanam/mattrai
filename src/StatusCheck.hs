@@ -3,15 +3,17 @@ module StatusCheck where
 import Prelude hiding (lookup)
 
 import Control.Exception (catch, displayException)
-import Control.Lens ((^.),(.~),(&))
+import Control.Lens ((^.),(.~),(&),(^?),(^..))
+import Control.Lens.Prism (_Just)
 import Data.Aeson (decode, Value(..), fromJSON)
-import Data.Aeson.Lens (key, asText)
+import Data.Aeson.Lens (key, _String, _Object, _Array)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Data.Either (fromRight)
-import Data.HashMap.Strict (keys, HashMap(..), empty, lookup, fromList)
+import Data.HashMap.Strict as M (keys, HashMap(..), empty, lookup, fromList)
 import Data.List (isInfixOf)
-import Data.Maybe (fromMaybe, fromJust)
+import Data.Maybe (maybe, fromMaybe, fromJust)
 import Data.Text (Text, pack, unpack, append)
+import qualified Data.Vector as V (toList, empty)
 import Network.Connection (TLSSettings(..))
 import Network.HTTP.Client (Manager, HttpException(..), HttpExceptionContent(..), defaultManagerSettings, managerResponseTimeout, responseTimeoutMicro, newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings, mkManagerSettings, newTlsManagerWith,mkManagerSettingsContext)
@@ -43,41 +45,28 @@ httpErrorHandler (HttpExceptionRequest _ (StatusCodeException r _)) = HttpCode $
 httpErrorHandler (HttpExceptionRequest _ failure)                   = OtherFailure $ pack (show failure)
 httpErrorHandler _                                                  = UnknownFailure2
 
+getKeys blackList locator payload =
+     maybe []
+           (filter (not . (`elem` blackList)) . keys)
+           $ payload ^? _Just . responseBody . locator . _Object
+
+getServiceUpStatus locator payload ky =
+  if Just "UP" == (payload ^? _Just . responseBody . locator . key ky . key "status" . _String) then
+    Up
+  else
+    Down
 
 healthCheckStatus :: Endpoint -> IO [HealthCheckResult]
 healthCheckStatus (Endpoint url) = do
   payload <- wrapLog (append "Healthcheck check: " url) $
       catch (Just <$> getter url)
             $ \(_ :: HttpException) -> return Nothing
-  let kys1 = maybe []
-                   (filter (/= "status") .
-                   keys .
-                   (\(Object o) -> o) .
-                   fromMaybe (Object empty) .
-                   lookup ("details" :: Text).
-                   fromMaybe empty .
-                   decode .
-                   (^. responseBody))
-                      payload
-  let kys2 = maybe []
-                   (filter (\x -> (x /= "details") && (x /= "status")) .
-                   keys .
-                   (\(Object o) -> o) .
-                   fromMaybe (Object empty) .
-                   decode .
-                   (^. responseBody))
-                      payload
-  let getServiceUpStatus ky =
-        case payload of
-          Just t
-            | Just "UP" == decode (t ^. responseBody) ^. key "details" . key ky . key "status" . asText -> Up
-          _ -> Down
-  let getServiceUpStatus2 ky =
-        case payload of
-          Just t
-            | Just "UP" == decode (t ^. responseBody) ^. key ky . key "status" . asText -> Up
-          _ -> Down
-  let z1 = map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus t)) kys1
+
+  let kys1 = getKeys ["status"] (key "details") payload
+  let kys2 = getKeys ["details", "status"] id payload
+  let getServiceUpStatus1 = getServiceUpStatus (key "details") payload
+  let getServiceUpStatus2 = getServiceUpStatus id payload
+  let z1 = map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus1 t)) kys1
   let z2 = map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus2 t)) kys2
   return $ z1 ++ z2
 

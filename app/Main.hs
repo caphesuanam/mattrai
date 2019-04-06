@@ -41,10 +41,10 @@ pingEndpoints = concatMap
                      map (\inst ->
                           EndpointWithContext{
                               endpointWithContextEndpointType = Ping,
-                              endpoint                        = instPingEndpoint inst,
-                              endpointWithContextService      = serName service,
-                              endpointWithContextEnvironment  = instEnvironmentName inst
-                          }) (serInstances service))
+                              endpoint                        = _instPingEndpoint inst,
+                              endpointWithContextService      = _serName service,
+                              endpointWithContextEnvironment  = _instEnvironmentName inst
+                          }) (_serInstances service))
                   services
 
 emptyResultServices :: IO (IORef ResultServices)
@@ -64,14 +64,11 @@ mapServicesToJSON' ref = do infoM "FOO.BAR" "Retriving statuses"
 allEnvironments' :: [Text]
 allEnvironments' = map environmentNameAsText allEnvironments
 
--- allEnvironments :: [Service''] -> [Text]
--- allEnvironments = sort . mkUniq . map (environmentNameAsText . instEnvironmentName ) . concatMap serInstances
-
 mapServiceToResultService :: [Text] -> Service'' -> IO ResultService
 mapServiceToResultService envNames service =
-  ResultService (serviceName $ serName service)
+  ResultService (serviceName $ _serName service)
                 <$> Par.mapM (
-                      \envName -> mapInstancesToEnvironment envName (filter ((==  envName) . environmentNameAsText . instEnvironmentName) (serInstances service))) envNames
+                      \envName -> mapInstancesToEnvironment envName (filter ((==  envName) . environmentNameAsText . _instEnvironmentName) (_serInstances service))) envNames
 
 mapInstancesToEnvironment :: Text -> [Instance] -> IO ResultEnvironment
 mapInstancesToEnvironment envName insts =
@@ -83,19 +80,19 @@ mapInstancesToEnvironment envName insts =
 
 mapInstanceToResultInstance :: Instance -> IO ResultInstance
 mapInstanceToResultInstance inst = do
-  pingResult <- ping $ instPingEndpoint inst
-  bHealthCheckResult <- mapM (mapHealthCheckEndpointToResult . getEndpoint) (filter isHealthcheck $ miscEndpoints inst)
+  pingResult <- ping $ _instPingEndpoint inst
+  bHealthCheckResult <- mapM (mapHealthCheckEndpointToResult . getEndpoint) (filter isHealthcheck $ _instMiscEndpoints inst)
   print bHealthCheckResult
   return $
     ResultInstance
-      { resultInstanceEnvironmentName = environmentNameAsText $ instEnvironmentName inst
-      , resultInstancePingEndpoint = instPingEndpoint inst
+      { resultInstanceEnvironmentName = environmentNameAsText $ _instEnvironmentName inst
+      , resultInstancePingEndpoint = _instPingEndpoint inst
       , resultInstancePingResult = pingResult
-      , resultInstanceDocumentation = map getEndpoint $ filter isDoc $ miscEndpoints inst
-      , resultInstanceLogs          = map getEndpoint $ filter isLog $ miscEndpoints inst
+      , resultInstanceDocumentation = map getEndpoint $ filter isDoc $ _instMiscEndpoints inst
+      , resultInstanceLogs          = map getEndpoint $ filter isLog $ _instMiscEndpoints inst
       , resultInstanceHealthCheckResults = bHealthCheckResult
-      , resultInstanceMiscEndpoints = map (\misc -> (getMiscEndpointName misc, getEndpoint misc)) $ filter isMisc $ miscEndpoints inst
-      , information = staticInfo inst
+      , resultInstanceMiscEndpoints = map (\misc -> (getMiscEndpointName misc, getEndpoint misc)) $ filter isMisc $ _instMiscEndpoints inst
+      , information = _instStaticInfo inst
       }
 
 mapHealthCheckEndpointToResult :: Endpoint -> IO ResultHealthCheck

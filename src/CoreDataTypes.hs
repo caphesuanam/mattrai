@@ -3,13 +3,11 @@ module CoreDataTypes where
 
 
 import Control.Lens
---import Data.Aeson (ToJSON, toJSON, object, (.=))
 import Data.Hashable (Hashable)
 import Data.Text (Text)
 import GHC.Generics
 
 newtype Endpoint = Endpoint Text deriving (Show, Eq, Generic)
---instance ToJSON Endpoint
 instance Hashable Endpoint
 
 endpointToString (Endpoint s) = s
@@ -45,6 +43,7 @@ data PingResult = Timeout
                 | OtherFailure Text
                 | HttpCode Int
                 deriving (Show, Eq)
+makeLenses ''PingResult
 -- instance ToJSON PingResult where
 --   toJSON stat =
 --     let base = [ "status" .= if success then "Up" :: Text else "Down" ]
@@ -74,23 +73,30 @@ data EndpointWithContext = EndpointWithContext {
 
 data EndpointType = Ping | HealthCheck deriving (Show, Eq)
 
-data Instance = Instance {
-  instEnvironmentName      :: EnvironmentName
-, instPingEndpoint         :: Endpoint
-, miscEndpoints            :: [MiscEndpoint]
-, staticInfo               :: [(Text, Text)]
-}
-
 data MiscEndpoint = MiscEndpoint Text Endpoint
                   | LogsEndpoint Endpoint
                   | DocsEndpoint Endpoint
                   | HealthCheckEndpoint Endpoint
+makeLenses ''MiscEndpoint
 
-data Service'' = Service {
-  serName      :: ServiceName
-, serInstances :: [Instance]
+data Instance = Instance {
+  _instEnvironmentName      :: EnvironmentName
+, _instPingEndpoint         :: Endpoint
+, _instMiscEndpoints        :: [MiscEndpoint]
+, _instStaticInfo           :: [(Text, Text)]
+}
+makeLenses ''Instance
+
+data GlobalLink = GlobalLink Text Endpoint
+data GlobalLinks = GlobalLinks {
+  globalLink :: GlobalLink
 }
 
+
+data Service'' = Service {
+  _serName      :: ServiceName
+, _serInstances :: [Instance]
+}
 makeLenses ''Service''
 
 docsEndpoint :: Text -> MiscEndpoint

@@ -2,6 +2,7 @@ module Config where
 
 import CoreDataTypes
 import Data.Text (Text)
+import Control.Lens
 
 integration :: EnvironmentName
 integration = Environment "Integration"
@@ -21,35 +22,45 @@ owner = "owner"
 allEnvironments :: [EnvironmentName]
 allEnvironments = [integration, preProd, production]
 
+withAttribute :: Service'' -> (Text, Text) -> Service''
+withAttribute service (name, value) = over (serInstances . traverse . instStaticInfo)
+                                           ((name,value) :)
+                                           service
+
+withMiscEndpoint :: Service'' ->  (Text, MiscEndpoint) -> Service''
+withMiscEndpoint service (name, ep) = over (serInstances . traverse . instMiscEndpoints)
+                                          (ep :)
+                                          service
+
 services =
   [
     Service {
-      serName = ServiceName "Google"
-    , serInstances = [
+      _serName = ServiceName "Google"
+    , _serInstances = [
         Instance {
-          instEnvironmentName = production
-        , instPingEndpoint    = Endpoint "http://google.com"
-        , miscEndpoints = [
+          _instEnvironmentName = production
+        , _instPingEndpoint    = Endpoint "http://google.com"
+        , _instMiscEndpoints = [
             DocsEndpoint $ Endpoint "https://about.google"
           , LogsEndpoint $ Endpoint "http://google.com?q=logs"
           , MiscEndpoint "Business Verification" (Endpoint "https://google.com/verifymybusiness")
           , HealthCheckEndpoint $ Endpoint "http://0.0.0.0:8080/healthcheck/happy"
           ]
-        , staticInfo    = [
+        , _instStaticInfo    = [
             "description" --> "Use to find stuff"
           , "owner"       --> "Alphabet"
           ]
         }
       , Instance {
-          instEnvironmentName = production
-        , instPingEndpoint    = Endpoint "http://google.com"
-        , miscEndpoints = [
+          _instEnvironmentName = production
+        , _instPingEndpoint    = Endpoint "http://google.com"
+        , _instMiscEndpoints = [
             DocsEndpoint $ Endpoint "https://about.google"
           , LogsEndpoint $ Endpoint "http://google.com?q=logs"
           , MiscEndpoint "Business Verification" (Endpoint "https://google.com/verifymybusiness")
-          , HealthCheckEndpoint $ Endpoint "http://0.0.0.0:8080/healthcheck/happy"
+          , HealthCheckEndpoint $ Endpoint "http://0.0.0.0:8080/healthcheck/happy2"
           ]
-        , staticInfo    = [
+        , _instStaticInfo    = [
             "description" --> "Use to find stuff"
           , "owner"       --> "Alphabet"
           ]
@@ -57,14 +68,14 @@ services =
       ]
     }
   , Service {
-      serName = ServiceName "Yahoo"
-    , serInstances = [
+      _serName = ServiceName "Yahoo"
+    , _serInstances = [
         Instance {
-          instEnvironmentName = production
-        , instPingEndpoint    = Endpoint "http://yahoo.com"
-        , miscEndpoints = [
+          _instEnvironmentName = production
+        , _instPingEndpoint    = Endpoint "http://yahoo.com"
+        , _instMiscEndpoints = [
           ]
-        , staticInfo    = []
+        , _instStaticInfo    = []
         }
       ]
     }
