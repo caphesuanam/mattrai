@@ -10,9 +10,9 @@ withAttribute service (name, value) = over (serInstances . traverse . instStatic
                                            ((name,value) :)
                                            service
 
-withMiscEndpoint :: Service'' ->  (Text, MiscEndpoint) -> Service''
-withMiscEndpoint service (name, ep) = over (serInstances . traverse . instMiscEndpoints)
-                                          (ep :)
-                                          service
+withMiscEndpoint :: Service'' ->  MiscEndpoint -> Service''
+withMiscEndpoint service ep = over (serInstances . traverse . instMiscEndpoints)
+                                   (ep :)
+                                   service
 
 
