@@ -1,7 +1,6 @@
 {-# LANGUAGE RankNTypes, TemplateHaskell #-}
 module CoreDataTypes where
 
-
 import Control.Lens
 import Data.Hashable (Hashable)
 import Data.Text (Text)
@@ -91,6 +90,7 @@ data GlobalLink = GlobalLink Text Endpoint
 data GlobalLinks = GlobalLinks {
   globalLink :: GlobalLink
 }
+
 
 
 data Service'' = Service {

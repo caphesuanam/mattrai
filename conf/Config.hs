@@ -2,7 +2,6 @@ module Config where
 
 import CoreDataTypes
 import Data.Text (Text)
-import Control.Lens
 
 integration :: EnvironmentName
 integration = Environment "Integration"
@@ -21,16 +20,6 @@ owner = "owner"
 
 allEnvironments :: [EnvironmentName]
 allEnvironments = [integration, preProd, production]
-
-withAttribute :: Service'' -> (Text, Text) -> Service''
-withAttribute service (name, value) = over (serInstances . traverse . instStaticInfo)
-                                           ((name,value) :)
-                                           service
-
-withMiscEndpoint :: Service'' ->  (Text, MiscEndpoint) -> Service''
-withMiscEndpoint service (name, ep) = over (serInstances . traverse . instMiscEndpoints)
-                                          (ep :)
-                                          service
 
 services =
   [
