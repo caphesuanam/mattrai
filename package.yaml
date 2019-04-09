@@ -44,6 +44,7 @@ dependencies:
 - auto-update == 0.1.4.1
 - tls == 1.4.1
 - uri-bytestring == 0.3.2.1
+- modern-uri == 0.3.0.1
 library:
   source-dirs:
     - src
