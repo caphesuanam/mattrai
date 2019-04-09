@@ -6,7 +6,7 @@ import Data.Hashable (Hashable)
 import Data.Text (Text)
 import GHC.Generics
 
-newtype Endpoint = Endpoint Text deriving (Show, Eq, Generic)
+newtype Endpoint = Endpoint {_endpointUrl :: Text} deriving (Show, Eq, Generic)
 instance Hashable Endpoint
 makeLenses ''Endpoint
 
