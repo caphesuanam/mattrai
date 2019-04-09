@@ -8,6 +8,7 @@ import GHC.Generics
 
 newtype Endpoint = Endpoint Text deriving (Show, Eq, Generic)
 instance Hashable Endpoint
+makeLenses ''Endpoint
 
 endpointToString (Endpoint s) = s
 
@@ -15,15 +16,8 @@ data HealthCheckResult = HealthCheckResult {
   healthCheckResultItemName   :: HealthCheckItem
 , healthCheckResultItemStatus :: HealthCheckItemStatus
 } deriving (Show)
---instance ToJSON HealthCheckResult where
---  toJSON (HealthCheckResult name status) =
---    object [
---             "name"   .= name
---           , "status" .= status
---           ]
 
 newtype HealthCheckItem = HealthCheckItem Text deriving (Show, Generic)
---instance ToJSON HealthCheckItem
 
 healthCheckItemName :: HealthCheckItem -> Text
 healthCheckItemName (HealthCheckItem i) = i
@@ -32,7 +26,7 @@ healthCheckItemName (HealthCheckItem i) = i
 data HealthCheckItemStatus = Up
                            | Down
                            deriving (Generic, Show)
---instance ToJSON HealthCheckItemStatus
+makePrisms ''HealthCheckItemStatus
 
 data PingResult = Timeout
                 | CannotConnect
@@ -43,17 +37,10 @@ data PingResult = Timeout
                 | HttpCode Int
                 deriving (Show, Eq)
 makeLenses ''PingResult
--- instance ToJSON PingResult where
---   toJSON stat =
---     let base = [ "status" .= if success then "Up" :: Text else "Down" ]
---         success = case stat of
---                     HttpCode n | n >= 200 && n < 300 -> True
---                     _                                -> False
---     in object $ if success then base else "reason" .= show stat : base
 
 
---
 newtype EnvironmentName = Environment Text deriving Show
+makeLenses ''EnvironmentName
 
 environmentNameAsText :: EnvironmentName -> Text
 environmentNameAsText (Environment str) = str
@@ -76,7 +63,7 @@ data MiscEndpoint = MiscEndpoint Text Endpoint
                   | LogsEndpoint Endpoint
                   | DocsEndpoint Endpoint
                   | HealthCheckEndpoint Endpoint
-makeLenses ''MiscEndpoint
+makePrisms ''MiscEndpoint
 
 data Instance = Instance {
   _instEnvironmentName      :: EnvironmentName

@@ -43,6 +43,7 @@ dependencies:
 - strings == 1.1
 - auto-update == 0.1.4.1
 - tls == 1.4.1
+- uri-bytestring == 0.3.2.1
 library:
   source-dirs:
     - src
