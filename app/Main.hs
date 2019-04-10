@@ -103,16 +103,16 @@ mapHealthCheckEndpointToResult endpoint =
      , healthCheckResultItems = healthCheckResult
      }
 
+loop ref = do _ <- mapServicesToJSON' ref
+              threadDelay sixtySeconds
+              loop ref
+       where sixtySeconds = 60000000
 
 main :: IO ()
-main = do let sixtySeconds = 60000000
-          updateGlobalLogger rootLoggerName (setLevel INFO)
+main = do updateGlobalLogger rootLoggerName (setLevel INFO)
 
           ref <- emptyResultServices
-          _ <- forkIO $
-                  do _ <- mapServicesToJSON' ref
-                     threadDelay sixtySeconds
-                     return ()
+          _ <- forkIO $ loop ref
 
           simpleHTTP nullConf $
             msum [
