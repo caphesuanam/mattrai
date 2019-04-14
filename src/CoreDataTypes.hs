@@ -73,12 +73,16 @@ data Instance = Instance {
 }
 makeLenses ''Instance
 
-data GlobalLink = GlobalLink Text Endpoint
-data GlobalLinks = GlobalLinks {
-  globalLink :: GlobalLink
+data MatTraiConfig = MatTraiConfig {
+  servicesToMonitor :: [Service'']
+, footer            :: Text
 }
 
-
+defaultConfig :: MatTraiConfig
+defaultConfig = MatTraiConfig {
+  servicesToMonitor = []
+, footer            = ""
+}
 
 data Service'' = Service {
   _serName      :: ServiceName

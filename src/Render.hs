@@ -13,14 +13,14 @@ import CoreDataTypes
 import ResultJson
 
 
-topLevelPage :: [Text] -> ResultServices -> Html
-topLevelPage envKey result =
-    htmlFrameWork $ do
-      do div ! id "bg" $
-           if isLoading result then
-              loadingMessage
-           else
-             statusTable (map toHtml envKey) result
+topLevelPage :: Text -> [Text] -> ResultServices -> Html
+topLevelPage footer envKey result =
+    htmlFrameWork footer $
+      div ! id "bg" $
+        if isLoading result then
+           loadingMessage
+        else
+          statusPage (map toHtml envKey) result
 
 commonHeader :: Html
 commonHeader = head $ do
@@ -52,8 +52,8 @@ statusHeaderRow =
 statusHeaderCell :: Html -> Html
 statusHeaderCell = divClass "statusTableHead"
 
-statusTable :: [Html] -> ResultServices -> Html
-statusTable envKey (ResultServices services) =
+statusPage :: [Html] -> ResultServices -> Html
+statusPage envKey (ResultServices services) =
              divClass "statusTable" $ do
                 statusHeaderRow envKey
                 divClass "statusTableBody" $
@@ -95,11 +95,12 @@ instanceInformation inst =
           optional "Documentation" (mapM_ (div . urlToAnchor)) resultInstanceDocumentation
           optional "Logs" (mapM_ (div . urlToAnchor)) resultInstanceLogs
           optional "Healthcheck Status" statusHealthCheckTable resultInstanceHealthCheckResults
-          optional "Other Endpoints" (mapM_ (\(name, endpoint) -> miscEndpointEntry name endpoint)) resultInstanceMiscEndpoints
+          optional "Other Endpoints" (mapM_ (uncurry miscEndpointEntry)) resultInstanceMiscEndpoints
           optional "Information" informationTable information
 
 miscEndpointEntry :: Text -> Endpoint -> Html
-miscEndpointEntry name val = div $ do (toHtml (name `mappend` ": "))
+miscEndpointEntry name val = div $ do b (toHtml name)
+                                      ": "
                                       urlToAnchor val
 
 informationTable :: [(Text,Text)] -> Html
@@ -182,14 +183,16 @@ statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ health
                                                      Up   -> "glyphicon glyphicon-ok green")
 
 report :: ResultServices -> Html
-report (ResultServices services) = htmlFrameWork $ mapM_ reportService services
+report (ResultServices services) = htmlFrameWork "" $ mapM_ reportService services
 
-htmlFrameWork :: Html -> Html
-htmlFrameWork theBody = html $ do commonHeader
-                                  body $
-                                    do divClass "back" $ mempty
-                                       theBody
-                                       pageFooter
+htmlFrameWork :: Text -> Html -> Html
+htmlFrameWork footer theBody =
+         html $ do commonHeader
+                   body $
+                     do divClass "back" mempty
+                        theBody
+                        divClass "customFooter" $ preEscapedToHtml footer
+                        pageFooter
 
 reportService :: ResultService -> Html
 reportService service = do h2 $ toHtml $ resServiceName service

@@ -21,7 +21,12 @@ owner = "owner"
 allEnvironments :: [EnvironmentName]
 allEnvironments = [integration, preProd, production]
 
-services =
+config = defaultConfig {
+  servicesToMonitor = testServices
+, footer = "<a href=\"http://bing.com\">Bing</a>"
+}
+
+testServices =
   [
     Service {
       _serName = ServiceName "Google"
