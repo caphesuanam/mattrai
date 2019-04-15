@@ -24,7 +24,6 @@ import System.Log.Logger ( updateGlobalLogger
                          , infoM
                          )
 
-import Config
 import Mattrai.CoreDataTypes
 import Mattrai.Render (topLevelPage, report)
 import Mattrai.ResultJson
@@ -38,17 +37,18 @@ newtype HealthCheckEndpoint = HealthCheckEndpoint String
 emptyResultServices :: IO (IORef ResultServices)
 emptyResultServices = newIORef $ ResultServices []
 
-mapServicesToJSON :: [Service''] -> IO ResultServices
-mapServicesToJSON services =
-     let envNames = allEnvironments' -- services
+mapServicesToJSON :: [EnvironmentName] -> [Service''] -> IO ResultServices
+mapServicesToJSON envs services =
+     let envNames = allEnvironments' envs
      in ResultServices <$> mapM (mapServiceToResultService envNames) services
 
-mapServicesToJSON' :: [Service''] -> IORef ResultServices -> IO ResultServices
-mapServicesToJSON' services ref = do infoM "FOO.BAR" "Retriving statuses"
-                                     mapServicesToJSON services >>= writeIORef ref
-                                     readIORef ref
-allEnvironments' :: [Text]
-allEnvironments' = map environmentNameAsText allEnvironments
+mapServicesToJSON' :: [EnvironmentName] -> [Service''] -> IORef ResultServices -> IO ResultServices
+mapServicesToJSON' envs services ref = do infoM "FOO.BAR" "Retriving statuses"
+                                          mapServicesToJSON envs services >>= writeIORef ref
+                                          readIORef ref
+
+allEnvironments' :: [EnvironmentName] -> [Text]
+allEnvironments' envs = map environmentNameAsText envs
 
 mapServiceToResultService :: [Text] -> Service'' -> IO ResultService
 mapServiceToResultService envNames service =
@@ -89,24 +89,26 @@ mapHealthCheckEndpointToResult endpoint =
      , healthCheckResultItems = healthCheckResult
      }
 
-loop services ref = do _ <- mapServicesToJSON' services ref
-                       threadDelay sixtySeconds
-                       loop services ref
+loop envs services ref = do _ <- mapServicesToJSON' envs services ref
+                            threadDelay sixtySeconds
+                            loop envs services ref
        where sixtySeconds = 60000000
 
-runMattrai :: MatTraiConfig -> IO ()
+runMattrai :: MattraiConfig -> IO ()
 runMattrai config =
           do updateGlobalLogger rootLoggerName (setLevel INFO)
 
              ref <- emptyResultServices
-             _ <- forkIO $ loop services ref
+             _ <- forkIO $ loop allEnvironments services ref
 
              simpleHTTP nullConf $
                msum [
                       dir "static" $ serveDirectory DisableBrowsing [] "static"
                     , dir "report" $ displayResultPage ref report
-                    , nullDir >> displayResultPage ref (topLevelPage pageFooter allEnvironments')
+                    , nullDir >> displayResultPage ref (topLevelPage pageFooter (allEnvironments' allEnvironments))
                     ]
               where displayResultPage ref renderer = liftIO (readIORef ref) >>= ok . toResponse . renderer
                     services = servicesToMonitor config
                     pageFooter = footer config
+                    allEnvironments = environmentsToMonitor config
+

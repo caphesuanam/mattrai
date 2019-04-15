@@ -73,15 +73,17 @@ data Instance = Instance {
 }
 makeLenses ''Instance
 
-data MatTraiConfig = MatTraiConfig {
-  servicesToMonitor :: [Service'']
-, footer            :: Text
+data MattraiConfig = MattraiConfig {
+  servicesToMonitor     :: [Service'']
+, environmentsToMonitor :: [EnvironmentName]
+, footer                :: Text
 }
 
-defaultConfig :: MatTraiConfig
-defaultConfig = MatTraiConfig {
-  servicesToMonitor = []
-, footer            = ""
+defaultConfig :: MattraiConfig
+defaultConfig = MattraiConfig {
+  servicesToMonitor     = []
+, environmentsToMonitor = []
+, footer                  = ""
 }
 
 data Service'' = Service {

@@ -24,6 +24,7 @@ allEnvironments = [integration, preProd, production]
 
 config = defaultConfig {
   servicesToMonitor = testServices
+, environmentsToMonitor = [integration, preProd, production]
 , footer = "<a href=\"http://bing.com\">Bing</a>"
 }
 
