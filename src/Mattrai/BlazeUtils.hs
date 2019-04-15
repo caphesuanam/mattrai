@@ -1,4 +1,4 @@
-module BlazeUtils where
+module Mattrai.BlazeUtils where
 
 import Prelude hiding (div)
 

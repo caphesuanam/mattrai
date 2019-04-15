@@ -1,4 +1,4 @@
-module StatusCheck where
+module Mattrai.StatusCheck where
 
 import Prelude hiding (lookup)
 
@@ -21,7 +21,7 @@ import Network.Wreq
 import Network.TLS (ClientParams(ClientParams))
 import System.Log.Logger (infoM)
 
-import CoreDataTypes
+import Mattrai.CoreDataTypes
 
 info :: Text -> IO()
 info = infoM "Mattrai" . unpack

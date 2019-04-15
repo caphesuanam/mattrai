@@ -1,9 +1,9 @@
-module ConfigHelpers where
+module Mattrai.ConfigHelpers where
 
 import Control.Lens
 import Data.Text (Text)
 
-import CoreDataTypes
+import Mattrai.CoreDataTypes
 
 withAttribute :: Service'' -> (Text, Text) -> Service''
 withAttribute service (name, value) = over (serInstances . traverse . instStaticInfo)

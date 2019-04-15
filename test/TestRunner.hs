@@ -2,8 +2,8 @@ module Main where
 
 import Config (config)
 import Mattrai.CoreDataTypes
-import Mattrai (runMattrai)
+import Mattrai.MatTrai (runMatTrai)
 
 main :: IO ()
-main = runMattrai config
+main = runMatTrai config
 

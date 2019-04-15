@@ -1,5 +1,5 @@
 {-# LANGUAGE RankNTypes, TemplateHaskell #-}
-module CoreDataTypes where
+module Mattrai.CoreDataTypes where
 
 import Control.Lens
 import Data.Hashable (Hashable)

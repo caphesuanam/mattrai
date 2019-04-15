@@ -1,4 +1,4 @@
-name:                dashboard
+name:                mattrai
 version:             0.1.0.0
 github:              "githubuser/dashboard"
 license:             BSD3
@@ -45,32 +45,48 @@ dependencies:
 - tls == 1.4.1
 - uri-bytestring == 0.3.2.1
 - modern-uri == 0.3.0.1
+
+
 library:
   source-dirs:
     - src
     - conf
+  exposed-modules:
+    - Mattrai.ConfigHelpers
+    - Mattrai.CoreDataTypes
+    - Mattrai
 
 executables:
   dashboard-exe:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:
+    - app
+    - conf
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - dashboard
+    - mattrai
 
 tests:
-  dashboard-test:
-    main:                Spec.hs
+  runner:
+    main:                TestRunner.hs
     source-dirs:         test
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - dashboard
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+
+  #dashboard-test:
+  #  main:                Spec.hs
+  #  source-dirs:         test
+  #  ghc-options:
+  #  - -threaded
+  #  - -rtsopts
+  #  - -with-rtsopts=-N
+  #  dependencies:
+  #  - dashboard
 
 default-extensions:
   - OverloadedStrings

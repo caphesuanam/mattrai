@@ -1,11 +1,11 @@
-module ResultJson where
+module Mattrai.ResultJson where
 
 import Data.Hashable (hash)
 import Data.Text (Text, append, pack)
 import Data.Vector as V
 import GHC.Generics (Generic)
 
-import CoreDataTypes
+import Mattrai.CoreDataTypes
 
 newtype ResultServices = ResultServices[ResultService]
 -- instance ToJSON ResultServices

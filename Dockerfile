@@ -21,9 +21,9 @@ COPY ./package.yaml /service
 WORKDIR /service
 RUN stack build --dependencies-only --fast
 COPY ./src /service/src
-COPY ./app /service/app
+#COPY ./app /service/app
 COPY ./static /service/static
-RUN mkdir -p /service/conf
+RUN mkdir -p /service/app
 #RUN stack build --fast
 EXPOSE 8000
 CMD stack build --fast && stack exec dashboard-exe

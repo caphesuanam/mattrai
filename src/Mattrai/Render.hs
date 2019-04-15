@@ -1,4 +1,4 @@
-module Render (topLevelPage, report)
+module Mattrai.Render (topLevelPage, report)
 where
 
 import Prelude hiding (span, id, div, head)
@@ -8,9 +8,9 @@ import Text.Blaze (toValue, (!), preEscapedText)
 import Text.Blaze.Html5 as H hiding (map)
 import Text.Blaze.Html5.Attributes as A hiding (span)
 
-import BlazeUtils (addScript, addStyleSheet, anchor, divClass)
-import CoreDataTypes
-import ResultJson
+import Mattrai.BlazeUtils (addScript, addStyleSheet, anchor, divClass)
+import Mattrai.CoreDataTypes
+import Mattrai.ResultJson
 
 
 topLevelPage :: Text -> [Text] -> ResultServices -> Html
@@ -158,7 +158,7 @@ statusHealthChecks :: [ResultHealthCheck] -> Html
 statusHealthChecks = divClass "healthChecks" . mconcat . map statusHealthCheck
 
 statusHealthCheckTable :: [ResultHealthCheck] -> Html
-statusHealthCheckTable = mapM_ (\h -> do div . urlToAnchor . ResultJson.healthCheckEndpoint $ h
+statusHealthCheckTable = mapM_ (\h -> do div . urlToAnchor . Mattrai.ResultJson.healthCheckEndpoint $ h
                                          statusHealthCheckRows $ healthCheckResultItems h)
 
 
@@ -173,7 +173,7 @@ statusHealthCheckRow (HealthCheckResult (HealthCheckItem name) status) =
 
 
 statusHealthCheck :: ResultHealthCheck -> Html
-statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem $ endpointToString $ ResultJson.healthCheckEndpoint healthCheck) . healthCheckResultItems $ healthCheck
+statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem $ endpointToString $ Mattrai.ResultJson.healthCheckEndpoint healthCheck) . healthCheckResultItems $ healthCheck
 
 statusHealthCheckItem :: Text -> HealthCheckResult -> Html
 statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ healthCheckItemName $ healthCheckResultItemName result)

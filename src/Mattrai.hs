@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module MatTrai (runMatTrai)
+module Mattrai (runMattrai)
 where
 
 import           Control.Concurrent         (forkIO, threadDelay)
@@ -25,10 +25,10 @@ import System.Log.Logger ( updateGlobalLogger
                          )
 
 import Config
-import CoreDataTypes
-import Render (topLevelPage, report)
-import ResultJson
-import StatusCheck (healthCheckStatus, ping)
+import Mattrai.CoreDataTypes
+import Mattrai.Render (topLevelPage, report)
+import Mattrai.ResultJson
+import Mattrai.StatusCheck (healthCheckStatus, ping)
 
 mkUniq :: Ord a => [a] -> [a]
 mkUniq = Set.toList . Set.fromList
@@ -85,7 +85,7 @@ mapHealthCheckEndpointToResult :: Endpoint -> IO ResultHealthCheck
 mapHealthCheckEndpointToResult endpoint =
   do healthCheckResult <- healthCheckStatus endpoint
      return $ ResultHealthCheck {
-       ResultJson.healthCheckEndpoint    = endpoint
+       Mattrai.ResultJson.healthCheckEndpoint    = endpoint
      , healthCheckResultItems = healthCheckResult
      }
 
@@ -94,8 +94,8 @@ loop services ref = do _ <- mapServicesToJSON' services ref
                        loop services ref
        where sixtySeconds = 60000000
 
-runMatTrai :: MatTraiConfig -> IO ()
-runMatTrai config =
+runMattrai :: MatTraiConfig -> IO ()
+runMattrai config =
           do updateGlobalLogger rootLoggerName (setLevel INFO)
 
              ref <- emptyResultServices
