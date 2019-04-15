@@ -12,13 +12,13 @@ An eye on all your services. Mattrai is a dashboard that shows services deployed
 ## Getting Started
 1. `mkdir conf`
 1. `touch conf/Config.hs`
-1. Enter the following in `conf/Config.hs`:
+1. Enter the following in `conf/Main.hs`:
 
 ```
-module Config where
-
-import CoreDataTypes
 import Data.Text (Text)
+
+import Mattrai.CoreDataTypes
+import Mattrai
 
 integration :: EnvironmentName
 integration = Environment "Integration"
@@ -38,7 +38,13 @@ owner = "owner"
 allEnvironments :: [EnvironmentName]
 allEnvironments = [integration, preProd, production]
 
-services =
+config = defaultConfig {
+  servicesToMonitor = testServices
+, environmentsToMonitor = [integration, preProd, production]
+, footer = "<a href=\"http://bing.com\">Bing</a>"
+}
+
+testServices =
   [
     Service {
       _serName = ServiceName "Google"
@@ -73,7 +79,20 @@ services =
         }
       ]
     }
+  , Service {
+      _serName = ServiceName "Yahoo"
+    , _serInstances = [
+        Instance {
+          _instEnvironmentName = production
+        , _instPingEndpoint    = Endpoint "http://yahoo.com"
+        , _instMiscEndpoints = [
+          ]
+        , _instStaticInfo    = []
+        }
+      ]
+    }
   ]
+
 ```
 
 1. Then run

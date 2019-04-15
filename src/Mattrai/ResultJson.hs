@@ -5,7 +5,7 @@ import Data.Text (Text, append, pack)
 import Data.Vector as V
 import GHC.Generics (Generic)
 
-import Mattrai.CoreDataTypes
+import Mattrai.Service
 
 newtype ResultServices = ResultServices[ResultService]
 -- instance ToJSON ResultServices

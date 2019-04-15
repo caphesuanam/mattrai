@@ -21,7 +21,7 @@ import Network.Wreq
 import Network.TLS (ClientParams(ClientParams))
 import System.Log.Logger (infoM)
 
-import Mattrai.CoreDataTypes
+import Mattrai.Service
 
 info :: Text -> IO()
 info = infoM "Mattrai" . unpack

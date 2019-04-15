@@ -9,7 +9,7 @@ import Text.Blaze.Html5 as H hiding (map)
 import Text.Blaze.Html5.Attributes as A hiding (span)
 
 import Mattrai.BlazeUtils (addScript, addStyleSheet, anchor, divClass)
-import Mattrai.CoreDataTypes
+import Mattrai.Service
 import Mattrai.ResultJson
 
 

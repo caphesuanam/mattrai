@@ -1,5 +1,5 @@
 .stack-work/
-dashboard.cabal
+*.cabal
 *~
 out
 cabal.config

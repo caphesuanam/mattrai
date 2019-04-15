@@ -1,5 +1,5 @@
 {-# LANGUAGE RankNTypes, TemplateHaskell #-}
-module Mattrai.CoreDataTypes where
+module Mattrai.Service where
 
 import Control.Lens
 import Data.Hashable (Hashable)
@@ -26,7 +26,6 @@ healthCheckItemName (HealthCheckItem i) = i
 data HealthCheckItemStatus = Up
                            | Down
                            deriving (Generic, Show)
-makePrisms ''HealthCheckItemStatus
 
 data PingResult = Timeout
                 | CannotConnect
@@ -36,7 +35,6 @@ data PingResult = Timeout
                 | OtherFailure Text
                 | HttpCode Int
                 deriving (Show, Eq)
-makeLenses ''PingResult
 
 
 newtype EnvironmentName = Environment Text deriving Show
@@ -73,24 +71,11 @@ data Instance = Instance {
 }
 makeLenses ''Instance
 
-data MattraiConfig = MattraiConfig {
-  servicesToMonitor     :: [Service'']
-, environmentsToMonitor :: [EnvironmentName]
-, footer                :: Text
-}
-
-defaultConfig :: MattraiConfig
-defaultConfig = MattraiConfig {
-  servicesToMonitor     = []
-, environmentsToMonitor = []
-, footer                  = ""
-}
-
-data Service'' = Service {
+data Service = Service {
   _serName      :: ServiceName
 , _serInstances :: [Instance]
 }
-makeLenses ''Service''
+makeLenses ''Service
 
 docsEndpoint :: Text -> MiscEndpoint
 docsEndpoint = DocsEndpoint . Endpoint

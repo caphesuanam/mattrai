@@ -2,7 +2,8 @@ module Config where
 
 import Data.Text (Text)
 
-import Mattrai.CoreDataTypes
+import Mattrai.Service
+import Mattrai
 
 integration :: EnvironmentName
 integration = Environment "Integration"

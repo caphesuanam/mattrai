@@ -1,7 +1,7 @@
 module Main where
 
 import Config (config)
-import Mattrai.CoreDataTypes
+import Mattrai.Service
 import Mattrai (runMattrai)
 
 main :: IO ()

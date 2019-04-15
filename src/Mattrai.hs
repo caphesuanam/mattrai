@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Mattrai (runMattrai)
+module Mattrai (runMattrai, defaultConfig, MattraiConfig(..))
 where
 
 import           Control.Concurrent         (forkIO, threadDelay)
@@ -24,10 +24,23 @@ import System.Log.Logger ( updateGlobalLogger
                          , infoM
                          )
 
-import Mattrai.CoreDataTypes
+import Mattrai.Service
 import Mattrai.Render (topLevelPage, report)
 import Mattrai.ResultJson
 import Mattrai.StatusCheck (healthCheckStatus, ping)
+
+defaultConfig :: MattraiConfig
+defaultConfig = MattraiConfig {
+  servicesToMonitor     = []
+, environmentsToMonitor = []
+, footer                = ""
+}
+
+data MattraiConfig = MattraiConfig {
+  servicesToMonitor     :: [Service]
+, environmentsToMonitor :: [EnvironmentName]
+, footer                :: Text
+}
 
 mkUniq :: Ord a => [a] -> [a]
 mkUniq = Set.toList . Set.fromList
@@ -37,20 +50,20 @@ newtype HealthCheckEndpoint = HealthCheckEndpoint String
 emptyResultServices :: IO (IORef ResultServices)
 emptyResultServices = newIORef $ ResultServices []
 
-mapServicesToJSON :: [EnvironmentName] -> [Service''] -> IO ResultServices
+mapServicesToJSON :: [EnvironmentName] -> [Service] -> IO ResultServices
 mapServicesToJSON envs services =
      let envNames = allEnvironments' envs
      in ResultServices <$> mapM (mapServiceToResultService envNames) services
 
-mapServicesToJSON' :: [EnvironmentName] -> [Service''] -> IORef ResultServices -> IO ResultServices
+mapServicesToJSON' :: [EnvironmentName] -> [Service] -> IORef ResultServices -> IO ResultServices
 mapServicesToJSON' envs services ref = do infoM "FOO.BAR" "Retriving statuses"
                                           mapServicesToJSON envs services >>= writeIORef ref
                                           readIORef ref
 
 allEnvironments' :: [EnvironmentName] -> [Text]
-allEnvironments' envs = map environmentNameAsText envs
+allEnvironments' = map environmentNameAsText
 
-mapServiceToResultService :: [Text] -> Service'' -> IO ResultService
+mapServiceToResultService :: [Text] -> Service -> IO ResultService
 mapServiceToResultService envNames service =
   ResultService (serviceName $ _serName service)
                 <$> Par.mapM (

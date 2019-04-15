@@ -1,10 +1,10 @@
 name:                mattrai
 version:             0.1.0.0
-github:              "githubuser/dashboard"
+github:              "caphesuanong/mattrai"
 license:             BSD3
-author:              "Author name here"
+author:              "Caphesuanong"
 maintainer:          "example@example.com"
-copyright:           "2018 Author name here"
+copyright:           "2019 Caphesuanong"
 
 extra-source-files:
 - README.md
@@ -53,7 +53,7 @@ library:
     - conf
   exposed-modules:
     - Mattrai.ConfigHelpers
-    - Mattrai.CoreDataTypes
+    - Mattrai.Service
     - Mattrai
 
 executables:
