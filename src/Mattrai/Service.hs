@@ -12,36 +12,13 @@ makeLenses ''Endpoint
 
 endpointToString (Endpoint s) = s
 
-data HealthCheckResult = HealthCheckResult {
-  healthCheckResultItemName   :: HealthCheckItem
-, healthCheckResultItemStatus :: HealthCheckItemStatus
-} deriving (Show)
-
 newtype HealthCheckItem = HealthCheckItem Text deriving (Show, Generic)
 
 healthCheckItemName :: HealthCheckItem -> Text
 healthCheckItemName (HealthCheckItem i) = i
 
-
-data HealthCheckItemStatus = Up
-                           | Down
-                           deriving (Generic, Show)
-
-data PingResult = Timeout
-                | CannotConnect
-                | DnsFailure
-                | UnknownFailure
-                | UnknownFailure2
-                | OtherFailure Text
-                | HttpCode Int
-                deriving (Show, Eq)
-
-
-newtype EnvironmentName = Environment Text deriving Show
+newtype EnvironmentName = Environment {_environmentNameAsString :: Text} deriving Show
 makeLenses ''EnvironmentName
-
-environmentNameAsText :: EnvironmentName -> Text
-environmentNameAsText (Environment str) = str
 
 newtype ServiceName = ServiceName {
   serviceName :: Text

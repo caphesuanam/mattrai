@@ -22,6 +22,7 @@ import Network.TLS (ClientParams(ClientParams))
 import System.Log.Logger (infoM)
 
 import Mattrai.Service
+import Mattrai.ResultJson
 
 info :: Text -> IO()
 info = infoM "Mattrai" . unpack

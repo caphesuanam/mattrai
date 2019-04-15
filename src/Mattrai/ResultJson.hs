@@ -7,6 +7,24 @@ import GHC.Generics (Generic)
 
 import Mattrai.Service
 
+data HealthCheckResult = HealthCheckResult {
+  healthCheckResultItemName   :: HealthCheckItem
+, healthCheckResultItemStatus :: HealthCheckItemStatus
+} deriving (Show)
+
+data HealthCheckItemStatus = Up
+                           | Down
+                           deriving (Generic, Show)
+
+data PingResult = Timeout
+                | CannotConnect
+                | DnsFailure
+                | UnknownFailure
+                | UnknownFailure2
+                | OtherFailure Text
+                | HttpCode Int
+                deriving (Show, Eq)
+
 newtype ResultServices = ResultServices[ResultService]
 -- instance ToJSON ResultServices
 

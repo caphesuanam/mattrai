@@ -11,6 +11,7 @@ import           Text.Blaze ((!))
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Control.AutoUpdate (mkAutoUpdate, defaultUpdateSettings, UpdateSettings(updateAction, updateFreq))
+import Control.Lens (traverse, (^..), (^.))
 import Control.Monad (liftM, msum, forever)
 import Control.Monad.IO.Class (liftIO)
 import Data.IORef
@@ -61,13 +62,13 @@ mapServicesToJSON' envs services ref = do infoM "FOO.BAR" "Retriving statuses"
                                           readIORef ref
 
 allEnvironments' :: [EnvironmentName] -> [Text]
-allEnvironments' = map environmentNameAsText
+allEnvironments' = (^.. traverse . environmentNameAsString)
 
 mapServiceToResultService :: [Text] -> Service -> IO ResultService
 mapServiceToResultService envNames service =
   ResultService (serviceName $ _serName service)
                 <$> Par.mapM (
-                      \envName -> mapInstancesToEnvironment envName (filter ((==  envName) . environmentNameAsText . _instEnvironmentName) (_serInstances service))) envNames
+                      \envName -> mapInstancesToEnvironment envName (filter ((==  envName) . (^. environmentNameAsString) . _instEnvironmentName) (_serInstances service))) envNames
 
 mapInstancesToEnvironment :: Text -> [Instance] -> IO ResultEnvironment
 mapInstancesToEnvironment envName insts =
@@ -84,7 +85,7 @@ mapInstanceToResultInstance inst = do
   print bHealthCheckResult
   return $
     ResultInstance
-      { resultInstanceEnvironmentName = environmentNameAsText $ _instEnvironmentName inst
+      { resultInstanceEnvironmentName = (^. environmentNameAsString) $ _instEnvironmentName inst
       , resultInstancePingEndpoint = _instPingEndpoint inst
       , resultInstancePingResult = pingResult
       , resultInstanceDocumentation = map getEndpoint $ filter isDoc $ _instMiscEndpoints inst
