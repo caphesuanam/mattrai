@@ -9,8 +9,6 @@ import GHC.Generics
 newtype Endpoint = Endpoint {_endpointUrl :: Text} deriving (Show, Eq, Generic)
 instance Hashable Endpoint
 
-newtype HealthCheckItem = HealthCheckItem {_healthCheckItemName :: Text} deriving (Show)
-
 newtype EnvironmentName = Environment {_environmentNameAsString :: Text} deriving Show
 
 newtype ServiceName = ServiceName {
@@ -18,14 +16,14 @@ newtype ServiceName = ServiceName {
 } deriving Show
 
 
-data EndpointWithContext = EndpointWithContext {
-  endpoint                               :: Endpoint
-, endpointWithContextEndpointType        :: EndpointType
-, endpointWithContextService             :: ServiceName
-, endpointWithContextEnvironment         :: EnvironmentName
-} deriving Show
+-- data EndpointWithContext = EndpointWithContext {
+--   endpoint                               :: Endpoint
+-- , endpointWithContextEndpointType        :: EndpointType
+-- , endpointWithContextService             :: ServiceName
+-- , endpointWithContextEnvironment         :: EnvironmentName
+-- } deriving Show
 
-data EndpointType = Ping | HealthCheck deriving (Show, Eq)
+-- data EndpointType = Ping | HealthCheck deriving (Show, Eq)
 
 data MiscEndpoint = MiscEndpoint Text Endpoint
                   | LogsEndpoint Endpoint
@@ -61,7 +59,6 @@ healthCheckEndpoint = HealthCheckEndpoint . Endpoint
 -- Lenses can be extremely useful for writing functions to make changes across multiple instances or endpoints
 
 makeLenses ''Endpoint
-makeLenses ''HealthCheckItem
 makeLenses ''EnvironmentName
 makePrisms ''MiscEndpoint
 makeLenses ''Instance

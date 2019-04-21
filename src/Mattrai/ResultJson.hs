@@ -9,6 +9,9 @@ import GHC.Generics (Generic)
 
 import Mattrai.Service
 
+newtype HealthCheckItem = HealthCheckItem {_healthCheckItemName :: Text} deriving (Show)
+makeLenses ''HealthCheckItem
+
 data HealthCheckItemStatus = Up
                            | Down
                            deriving (Generic, Show)
@@ -61,3 +64,4 @@ data ResultHealthCheck = ResultHealthCheck {
   healthCheckEndpoint    :: Endpoint
 , healthCheckResultItems  :: [HealthCheckResult]
 } deriving Show
+
