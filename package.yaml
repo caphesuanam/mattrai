@@ -1,29 +1,29 @@
 name:                mattrai
 version:             0.1.0.0
 github:              "caphesuanong/mattrai"
-license:             BSD3
+license:             AllRightsReserved
 author:              "Caphesuanong"
 maintainer:          "example@example.com"
-copyright:           "2019 Caphesuanong"
+copyright:           "2019(c) Caphesuanong"
 
 extra-source-files:
 - README.md
 - ChangeLog.md
 
 # Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
+synopsis:            An eye on all your services.
+category:            Monitoring
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/dashboard#readme>
+description:         Please see the documentation at <https://caphesuanong.github.io/mattrai/>
 
 dependencies:
 - base >= 4.7 && < 5
 - blaze-html == 0.9.1.1
 - blaze-markup == 0.8.2.2
-- containers == 0.6.0.1
+- containers >= 0.6 && < 0.7
 - connection == 0.2.8
 - hashable == 1.2.7.0
 - happstack-server == 7.5.1.3

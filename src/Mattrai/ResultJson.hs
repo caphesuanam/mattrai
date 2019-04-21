@@ -1,5 +1,7 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Mattrai.ResultJson where
 
+import Control.Lens
 import Data.Hashable (hash)
 import Data.Text (Text, append, pack)
 import Data.Vector as V
@@ -7,14 +9,17 @@ import GHC.Generics (Generic)
 
 import Mattrai.Service
 
-data HealthCheckResult = HealthCheckResult {
-  healthCheckResultItemName   :: HealthCheckItem
-, healthCheckResultItemStatus :: HealthCheckItemStatus
-} deriving (Show)
-
 data HealthCheckItemStatus = Up
                            | Down
                            deriving (Generic, Show)
+makePrisms ''HealthCheckItemStatus
+
+data HealthCheckResult = HealthCheckResult {
+  _healthCheckResultItemName   :: HealthCheckItem
+, _healthCheckResultItemStatus :: HealthCheckItemStatus
+} deriving (Show)
+
+makeLenses ''HealthCheckResult
 
 data PingResult = Timeout
                 | CannotConnect

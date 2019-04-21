@@ -8,17 +8,10 @@ import GHC.Generics
 
 newtype Endpoint = Endpoint {_endpointUrl :: Text} deriving (Show, Eq, Generic)
 instance Hashable Endpoint
-makeLenses ''Endpoint
 
-endpointToString (Endpoint s) = s
-
-newtype HealthCheckItem = HealthCheckItem Text deriving (Show, Generic)
-
-healthCheckItemName :: HealthCheckItem -> Text
-healthCheckItemName (HealthCheckItem i) = i
+newtype HealthCheckItem = HealthCheckItem {_healthCheckItemName :: Text} deriving (Show)
 
 newtype EnvironmentName = Environment {_environmentNameAsString :: Text} deriving Show
-makeLenses ''EnvironmentName
 
 newtype ServiceName = ServiceName {
   serviceName :: Text
@@ -38,21 +31,23 @@ data MiscEndpoint = MiscEndpoint Text Endpoint
                   | LogsEndpoint Endpoint
                   | DocsEndpoint Endpoint
                   | HealthCheckEndpoint Endpoint
-makePrisms ''MiscEndpoint
 
 data Instance = Instance {
   _instEnvironmentName      :: EnvironmentName
-, _instPingEndpoint         :: Endpoint
+, _instPingEndpoint         :: Endpoint -- |The endpoint that is hit to determine whether to colour the instance box green or red.
+                                        -- A 2XX response results in a green box
 , _instMiscEndpoints        :: [MiscEndpoint]
 , _instStaticInfo           :: [(Text, Text)]
 }
-makeLenses ''Instance
 
 data Service = Service {
   _serName      :: ServiceName
 , _serInstances :: [Instance]
 }
-makeLenses ''Service
+
+-- * Endpoint Constructors
+-- $construct
+-- Convenience functions for constructing the appropriate endpoints
 
 docsEndpoint :: Text -> MiscEndpoint
 docsEndpoint = DocsEndpoint . Endpoint
@@ -60,23 +55,19 @@ docsEndpoint = DocsEndpoint . Endpoint
 healthCheckEndpoint :: Text -> MiscEndpoint
 healthCheckEndpoint = HealthCheckEndpoint . Endpoint
 
-isDoc (DocsEndpoint _) = True
-isDoc _                = False
+-- * Lenses and Prisms
+-- $lenses
+-- It's normal to have lots of duplication between instances.
+-- Lenses can be extremely useful for writing functions to make changes across multiple instances or endpoints
 
-isHealthcheck (HealthCheckEndpoint _) = True
-isHealthcheck _                       = False
+makeLenses ''Endpoint
+makeLenses ''HealthCheckItem
+makeLenses ''EnvironmentName
+makePrisms ''MiscEndpoint
+makeLenses ''Instance
+makeLenses ''Service
 
-isLog (LogsEndpoint _) = True
-isLog _                = False
+-- * Miscellaneous
 
-isMisc (MiscEndpoint _ _) = True
-isMisc _                  = False
-
-getEndpoint (DocsEndpoint ep) = ep
-getEndpoint (HealthCheckEndpoint ep) = ep
-getEndpoint (LogsEndpoint ep) = ep
-getEndpoint (MiscEndpoint _ ep) = ep
-
-getMiscEndpointName (MiscEndpoint name _) = name
-
+-- |An alias to make the Mattrai config files read a bit nicer
 (-->) = (,)

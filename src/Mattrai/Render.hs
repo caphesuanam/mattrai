@@ -2,6 +2,7 @@ module Mattrai.Render (topLevelPage, report)
 where
 
 import Prelude hiding (span, id, div, head)
+import Control.Lens ((^.))
 import Data.Text (Text, append, pack)
 import Data.Tuple(fst,snd)
 import Text.Blaze (toValue, (!), preEscapedText)
@@ -173,12 +174,12 @@ statusHealthCheckRow (HealthCheckResult (HealthCheckItem name) status) =
 
 
 statusHealthCheck :: ResultHealthCheck -> Html
-statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem $ endpointToString $ Mattrai.ResultJson.healthCheckEndpoint healthCheck) . healthCheckResultItems $ healthCheck
+statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem $ (^. endpointUrl) $ Mattrai.ResultJson.healthCheckEndpoint healthCheck) . healthCheckResultItems $ healthCheck
 
 statusHealthCheckItem :: Text -> HealthCheckResult -> Html
-statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ healthCheckItemName $ healthCheckResultItemName result)
+statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ (result ^. healthCheckResultItemName . healthCheckItemName))
                                        $ span mempty
-                                         ! class_ (case healthCheckResultItemStatus result of
+                                         ! class_ (case _healthCheckResultItemStatus result of
                                                      Down -> "glyphicon glyphicon-minus-sign red"
                                                      Up   -> "glyphicon glyphicon-ok green")
 

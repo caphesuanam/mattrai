@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+-- |A module for running a server to monitor services across environments
 module Mattrai (runMattrai, defaultConfig, MattraiConfig(..))
 where
 
@@ -30,6 +31,7 @@ import Mattrai.Render (topLevelPage, report)
 import Mattrai.ResultJson
 import Mattrai.StatusCheck (healthCheckStatus, ping)
 
+-- |Default settings that should be overridden. Start by just overrriding `servicesToMonitor` and `environmentsToMonitor`.
 defaultConfig :: MattraiConfig
 defaultConfig = MattraiConfig {
   servicesToMonitor     = []
@@ -39,7 +41,7 @@ defaultConfig = MattraiConfig {
 
 data MattraiConfig = MattraiConfig {
   servicesToMonitor     :: [Service]
-, environmentsToMonitor :: [EnvironmentName]
+, environmentsToMonitor :: [EnvironmentName] -- |The ordering for the columns at the top of the status table.
 , footer                :: Text
 }
 
@@ -53,8 +55,8 @@ emptyResultServices = newIORef $ ResultServices []
 
 mapServicesToJSON :: [EnvironmentName] -> [Service] -> IO ResultServices
 mapServicesToJSON envs services =
-     let envNames = allEnvironments' envs
-     in ResultServices <$> mapM (mapServiceToResultService envNames) services
+     ResultServices <$> mapM (mapServiceToResultService envNames) services
+     where envNames = allEnvironments' envs
 
 mapServicesToJSON' :: [EnvironmentName] -> [Service] -> IORef ResultServices -> IO ResultServices
 mapServicesToJSON' envs services ref = do infoM "FOO.BAR" "Retriving statuses"
@@ -68,7 +70,7 @@ mapServiceToResultService :: [Text] -> Service -> IO ResultService
 mapServiceToResultService envNames service =
   ResultService (serviceName $ _serName service)
                 <$> Par.mapM (
-                      \envName -> mapInstancesToEnvironment envName (filter ((==  envName) . (^. environmentNameAsString) . _instEnvironmentName) (_serInstances service))) envNames
+                      \envName -> mapInstancesToEnvironment envName (filter ((==  envName) . (^. instEnvironmentName . environmentNameAsString) ) (_serInstances service))) envNames
 
 mapInstancesToEnvironment :: Text -> [Instance] -> IO ResultEnvironment
 mapInstancesToEnvironment envName insts =
@@ -80,26 +82,26 @@ mapInstancesToEnvironment envName insts =
 
 mapInstanceToResultInstance :: Instance -> IO ResultInstance
 mapInstanceToResultInstance inst = do
-  pingResult <- ping $ _instPingEndpoint inst
-  bHealthCheckResult <- mapM (mapHealthCheckEndpointToResult . getEndpoint) (filter isHealthcheck $ _instMiscEndpoints inst)
+  pingResult <- ping $ inst ^. instPingEndpoint
+  bHealthCheckResult <- mapM mapHealthCheckEndpointToResult $ inst ^.. instMiscEndpoints . traverse . _HealthCheckEndpoint
   print bHealthCheckResult
   return $
     ResultInstance
-      { resultInstanceEnvironmentName = (^. environmentNameAsString) $ _instEnvironmentName inst
-      , resultInstancePingEndpoint = _instPingEndpoint inst
+      { resultInstanceEnvironmentName = inst ^. instEnvironmentName . environmentNameAsString
+      , resultInstancePingEndpoint = inst ^. instPingEndpoint
       , resultInstancePingResult = pingResult
-      , resultInstanceDocumentation = map getEndpoint $ filter isDoc $ _instMiscEndpoints inst
-      , resultInstanceLogs          = map getEndpoint $ filter isLog $ _instMiscEndpoints inst
+      , resultInstanceDocumentation = inst ^.. instMiscEndpoints . traverse . _DocsEndpoint
+      , resultInstanceLogs          = inst ^.. instMiscEndpoints . traverse . _LogsEndpoint
       , resultInstanceHealthCheckResults = bHealthCheckResult
-      , resultInstanceMiscEndpoints = map (\misc -> (getMiscEndpointName misc, getEndpoint misc)) $ filter isMisc $ _instMiscEndpoints inst
-      , information = _instStaticInfo inst
+      , resultInstanceMiscEndpoints = inst ^.. instMiscEndpoints . traverse . _MiscEndpoint
+      , information = inst ^. instStaticInfo
       }
 
 mapHealthCheckEndpointToResult :: Endpoint -> IO ResultHealthCheck
 mapHealthCheckEndpointToResult endpoint =
   do healthCheckResult <- healthCheckStatus endpoint
      return $ ResultHealthCheck {
-       Mattrai.ResultJson.healthCheckEndpoint    = endpoint
+       Mattrai.ResultJson.healthCheckEndpoint = endpoint
      , healthCheckResultItems = healthCheckResult
      }
 
@@ -108,6 +110,7 @@ loop envs services ref = do _ <- mapServicesToJSON' envs services ref
                             loop envs services ref
        where sixtySeconds = 60000000
 
+-- |Start a Mattrai server by simply calling `runMattrai` and passing `defaultConfig` with the necessary config overridden.
 runMattrai :: MattraiConfig -> IO ()
 runMattrai config =
           do updateGlobalLogger rootLoggerName (setLevel INFO)
