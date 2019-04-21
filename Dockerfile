@@ -23,6 +23,7 @@ RUN stack build --dependencies-only --fast
 COPY ./src /service/src
 #COPY ./app /service/app
 COPY ./static /service/static
+RUN stack build 
 RUN mkdir -p /service/app
 #RUN stack build --fast
 EXPOSE 8000
