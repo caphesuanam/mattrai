@@ -21,6 +21,7 @@ import Network.Wreq
 import Network.TLS (ClientParams(ClientParams))
 import System.Log.Logger (infoM)
 
+import Mattrai.Endpoint
 import Mattrai.Service
 import Mattrai.ResultJson
 

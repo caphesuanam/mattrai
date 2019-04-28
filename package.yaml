@@ -53,6 +53,7 @@ library:
     - conf
   exposed-modules:
     - Mattrai.ConfigHelpers
+    - Mattrai.Endpoint
     - Mattrai.Service
     - Mattrai
 

@@ -26,6 +26,7 @@ import System.Log.Logger ( updateGlobalLogger
                          , infoM
                          )
 
+import Mattrai.Endpoint
 import Mattrai.Service
 import Mattrai.Render (topLevelPage, report)
 import Mattrai.ResultJson
@@ -39,9 +40,15 @@ defaultConfig = MattraiConfig {
 , footer                = ""
 }
 
+-- |Configuration for a Mattrai server.
+-- servicesToMonitor and environmentsToMonitor should be provided as a minimum.
 data MattraiConfig = MattraiConfig {
+  -- |Services to be reported as rows on the dashboard
   servicesToMonitor     :: [Service]
-, environmentsToMonitor :: [EnvironmentName] -- |The ordering for the columns at the top of the status table.
+  -- |The ordering for the columns at the top of the status table.
+, environmentsToMonitor :: [EnvironmentName]
+  -- |Footers allow HTML strings to be embedded directly under the dashboard.
+  -- Use this to insert strings for example.
 , footer                :: Text
 }
 

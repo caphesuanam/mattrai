@@ -2,6 +2,7 @@ module Config where
 
 import Data.Text (Text)
 
+import Mattrai.Endpoint
 import Mattrai.Service
 import Mattrai
 

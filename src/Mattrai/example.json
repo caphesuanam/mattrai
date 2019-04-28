@@ -8,7 +8,7 @@
           "pingUrl" : "http://bla",
           "status": {
             "pingStatus": {
-              "result: "up",
+              "result": "up",
               "httpcode": 200
             },
             "healthCheckStatuses": {

@@ -10,6 +10,7 @@ import Text.Blaze.Html5 as H hiding (map)
 import Text.Blaze.Html5.Attributes as A hiding (span)
 
 import Mattrai.BlazeUtils (addScript, addStyleSheet, anchor, divClass)
+import Mattrai.Endpoint
 import Mattrai.Service
 import Mattrai.ResultJson
 
@@ -177,7 +178,7 @@ statusHealthCheck :: ResultHealthCheck -> Html
 statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem $ (^. endpointUrl) $ Mattrai.ResultJson.healthCheckEndpoint healthCheck) . healthCheckResultItems $ healthCheck
 
 statusHealthCheckItem :: Text -> HealthCheckResult -> Html
-statusHealthCheckItem url result = span $ anchor url ! A.title (toValue $ (result ^. healthCheckResultItemName . healthCheckItemName))
+statusHealthCheckItem url result = span $ anchor url ! A.title (toValue (result ^. healthCheckResultItemName . healthCheckItemName))
                                        $ span mempty
                                          ! class_ (case _healthCheckResultItemStatus result of
                                                      Down -> "glyphicon glyphicon-minus-sign red"

@@ -1,45 +1,51 @@
 {-# LANGUAGE RankNTypes, TemplateHaskell #-}
+-- |Abstractions for services and instances of services that can be monitored.
 module Mattrai.Service where
 
 import Control.Lens
 import Data.Hashable (Hashable)
 import Data.Text (Text)
-import GHC.Generics
 
-newtype Endpoint = Endpoint {_endpointUrl :: Text} deriving (Show, Eq, Generic)
+import Mattrai.Endpoint
+
 instance Hashable Endpoint
 
-newtype EnvironmentName = Environment {_environmentNameAsString :: Text} deriving Show
+-- |Each instance can live in one environment. E.g. Producion or Staging.
+-- Environments are columns on the dashboard
+newtype EnvironmentName = Environment {
+  -- |A friendly, descriptive name for the environment
+  _environmentNameAsString :: Text
+} deriving Show
 
+-- |A friendly, descriptive name for a service
 newtype ServiceName = ServiceName {
+  -- |The service name as text
   serviceName :: Text
 } deriving Show
 
 
--- data EndpointWithContext = EndpointWithContext {
---   endpoint                               :: Endpoint
--- , endpointWithContextEndpointType        :: EndpointType
--- , endpointWithContextService             :: ServiceName
--- , endpointWithContextEnvironment         :: EnvironmentName
--- } deriving Show
-
--- data EndpointType = Ping | HealthCheck deriving (Show, Eq)
-
-data MiscEndpoint = MiscEndpoint Text Endpoint
-                  | LogsEndpoint Endpoint
-                  | DocsEndpoint Endpoint
-                  | HealthCheckEndpoint Endpoint
-
+-- |Instances of services that need to be observed. Instances have unique endpoints and live in
+-- one and only one environment.
 data Instance = Instance {
+  -- |The environment the instance belongs to
   _instEnvironmentName      :: EnvironmentName
-, _instPingEndpoint         :: Endpoint -- |The endpoint that is hit to determine whether to colour the instance box green or red.
-                                        -- A 2XX response results in a green box
+
+ -- |The endpoint that is hit to determine whether to colour the instance box green or red.
+ -- A 2XX response results in a green box
+, _instPingEndpoint         :: Endpoint
+
+  -- |Other interesting endpoints releveant to the instance e.g. Jenkins links, Wiki links, metrics etc.
 , _instMiscEndpoints        :: [MiscEndpoint]
+
+  -- |Information on the instance expressed as key/value pairs of strings
 , _instStaticInfo           :: [(Text, Text)]
 }
 
+-- |A service is a row in Mattrai. Each service has instances deployed across environments.
 data Service = Service {
+  -- |A friendly name that describes a service
   _serName      :: ServiceName
+  -- |All instances of belonging to the service.
 , _serInstances :: [Instance]
 }
 
@@ -47,9 +53,13 @@ data Service = Service {
 -- $construct
 -- Convenience functions for constructing the appropriate endpoints
 
+-- |Constructor to create an endpoint that documents a service
 docsEndpoint :: Text -> MiscEndpoint
 docsEndpoint = DocsEndpoint . Endpoint
 
+-- |Constructor to create a healthcheck endpoint for a service.
+-- Healthchecks inform on what is working within a service instance
+-- Java Spring healthchecks are supported.
 healthCheckEndpoint :: Text -> MiscEndpoint
 healthCheckEndpoint = HealthCheckEndpoint . Endpoint
 
@@ -58,9 +68,7 @@ healthCheckEndpoint = HealthCheckEndpoint . Endpoint
 -- It's normal to have lots of duplication between instances.
 -- Lenses can be extremely useful for writing functions to make changes across multiple instances or endpoints
 
-makeLenses ''Endpoint
 makeLenses ''EnvironmentName
-makePrisms ''MiscEndpoint
 makeLenses ''Instance
 makeLenses ''Service
 

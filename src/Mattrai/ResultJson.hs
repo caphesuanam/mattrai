@@ -7,6 +7,7 @@ import Data.Text (Text, append, pack)
 import Data.Vector as V
 import GHC.Generics (Generic)
 
+import Mattrai.Endpoint
 import Mattrai.Service
 
 newtype HealthCheckItem = HealthCheckItem {_healthCheckItemName :: Text} deriving (Show)

@@ -1,6 +1,6 @@
 # Mattrai
 
-An eye on all your services. Mattrai is a dashboard that shows services deployed accross environements in one place, checks they are up, confirms healthcheck status, and shows meta information about the services. This includes:
+An eye on all your services. Mattrai is a dashboard that shows services deployed across environments in one place, checks they are up, confirms health check status, and shows meta information about the services. This includes:
 * Documentation links
 * Logging links
 * Ping Endpoints to confirm a service is up
@@ -17,7 +17,8 @@ An eye on all your services. Mattrai is a dashboard that shows services deployed
 ```
 import Data.Text (Text)
 
-import Mattrai.CoreDataTypes
+import Mattrai.Endpoint
+import Mattrai.Service
 import Mattrai
 
 integration :: EnvironmentName
@@ -38,7 +39,8 @@ owner = "owner"
 allEnvironments :: [EnvironmentName]
 allEnvironments = [integration, preProd, production]
 
-config = defaultConfig {
+main :: IO ()
+main = runMattrai defaultConfig {
   servicesToMonitor = testServices
 , environmentsToMonitor = [integration, preProd, production]
 , footer = "<a href=\"http://bing.com\">Bing</a>"
@@ -92,7 +94,6 @@ testServices =
       ]
     }
   ]
-
 ```
 
 1. Then run
@@ -105,9 +106,14 @@ testServices =
 
 1. You can monitor progress with `docker logs mattrai` if things are a bit slow or if something went wrong.
 
+## Refactoring and maintaining
+
+All Mattrai modules are documented with [Haddock](https://www.haskell.org/haddock/).
+Mattrai can be built as a separate library and imported into your applications as required.
+
 ## Quick reference
 
 * Where to file issues:
-https://github.com/caphesuanong/mattrai/issues
+<https://github.com/caphesuanong/mattrai/issues>
 
 
