@@ -6,12 +6,14 @@ An eye on all your services. Mattrai is a dashboard that shows services deployed
 * Ping Endpoints to confirm a service is up
 * Any Meta information yuo desire, e.g. team names, identifiers, descriptions etc.
 
+Health checks work with Spring compatible health check endpoints.
+
 ![Pings occur periodically regardless of calls to the service](https://raw.githubusercontent.com/caphesuanong/mattrai/master/docs/mattrai.png)
 
 
 ## Getting Started
 1. `mkdir conf`
-1. `touch conf/Config.hs`
+1. `touch conf/Main.hs`
 1. Enter the following in `conf/Main.hs`:
 
 ```
@@ -98,7 +100,7 @@ testServices =
 
 1. Then run
 
-```docker run -d -p 8080:8000 -v `pwd`/conf:/service/conf --name mattrai caphesuanong/mattrai```
+```docker run -d -p 8080:8000 -v `pwd`/conf:/service/app --name mattrai caphesuanong/mattrai```
 
 1. Wait about 10 seconds.
 
