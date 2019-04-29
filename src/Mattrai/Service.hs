@@ -41,6 +41,11 @@ data Instance = Instance {
 , _instStaticInfo           :: [(Text, Text)]
 }
 
+-- |Create a service instance with the minimum mandatory information.
+-- Config helpers can then be used to add information across instances.
+serviceInstance :: Text -> Text -> Instance
+serviceInstance name ep = Instance (Environment name) (Endpoint ep) [] []
+
 -- |A service is a row in Mattrai. Each service has instances deployed across environments.
 data Service = Service {
   -- |A friendly name that describes a service

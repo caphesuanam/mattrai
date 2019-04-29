@@ -50,7 +50,6 @@ dependencies:
 library:
   source-dirs:
     - src
-    - conf
   exposed-modules:
     - Mattrai.ConfigHelpers
     - Mattrai.Endpoint
@@ -78,6 +77,8 @@ tests:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+    dependencies:
+      - mattrai
 
   #dashboard-test:
   #  main:                Spec.hs
