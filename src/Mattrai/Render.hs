@@ -12,7 +12,7 @@ import Text.Blaze.Html5.Attributes as A hiding (span)
 import Mattrai.BlazeUtils (addScript, addStyleSheet, anchor, divClass)
 import Mattrai.Endpoint
 import Mattrai.Service
-import Mattrai.ResultJson
+import Mattrai.Result
 
 
 topLevelPage :: Text -> [Text] -> ResultServices -> Html
@@ -160,7 +160,7 @@ statusHealthChecks :: [ResultHealthCheck] -> Html
 statusHealthChecks = divClass "healthChecks" . mconcat . map statusHealthCheck
 
 statusHealthCheckTable :: [ResultHealthCheck] -> Html
-statusHealthCheckTable = mapM_ (\h -> do div . urlToAnchor . Mattrai.ResultJson.healthCheckEndpoint $ h
+statusHealthCheckTable = mapM_ (\h -> do div . urlToAnchor . Mattrai.Result.healthCheckEndpoint $ h
                                          statusHealthCheckRows $ healthCheckResultItems h)
 
 
@@ -175,7 +175,7 @@ statusHealthCheckRow (HealthCheckResult (HealthCheckItem name) status) =
 
 
 statusHealthCheck :: ResultHealthCheck -> Html
-statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem $ (^. endpointUrl) $ Mattrai.ResultJson.healthCheckEndpoint healthCheck) . healthCheckResultItems $ healthCheck
+statusHealthCheck healthCheck = mconcat . map (statusHealthCheckItem $ (^. endpointUrl) $ Mattrai.Result.healthCheckEndpoint healthCheck) . healthCheckResultItems $ healthCheck
 
 statusHealthCheckItem :: Text -> HealthCheckResult -> Html
 statusHealthCheckItem url result = span $ anchor url ! A.title (toValue (result ^. healthCheckResultItemName . healthCheckItemName))

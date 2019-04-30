@@ -39,6 +39,11 @@ data Instance = Instance {
 
   -- |Information on the instance expressed as key/value pairs of strings
 , _instStaticInfo           :: [(Text, Text)]
+
+--   -- |Dynamic Properties consist of a property name, an endpoint and a lense/prism.
+--   -- The endpoint is called and the prism is used on the result with view.
+--   -- This can be used to extract the git version number from an endpoint, for example.
+-- , _instDynamicInfo          :: [(Text, Endpoint, (HTTP_RESULT -> Text))]
 }
 
 -- |Create a service instance with the minimum mandatory information.
@@ -53,6 +58,11 @@ data Service = Service {
   -- |All instances of belonging to the service.
 , _serInstances :: [Instance]
 }
+
+-- |Create a service with the minimum mandatory information.
+-- Config helpers can then be used to add information
+service :: Text -> [Instance] -> Service
+service = Service . ServiceName
 
 -- * Endpoint Constructors
 -- $construct

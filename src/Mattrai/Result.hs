@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Mattrai.ResultJson where
+module Mattrai.Result where
 
 import Control.Lens
 import Data.Hashable (hash)

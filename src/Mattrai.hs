@@ -29,7 +29,7 @@ import System.Log.Logger ( updateGlobalLogger
 import Mattrai.Endpoint
 import Mattrai.Service
 import Mattrai.Render (topLevelPage, report)
-import Mattrai.ResultJson
+import Mattrai.Result
 import Mattrai.StatusCheck (healthCheckStatus, ping)
 
 -- |Default settings that should be overridden. Start by just overrriding `servicesToMonitor` and `environmentsToMonitor`.
@@ -106,11 +106,8 @@ mapInstanceToResultInstance inst = do
 
 mapHealthCheckEndpointToResult :: Endpoint -> IO ResultHealthCheck
 mapHealthCheckEndpointToResult endpoint =
-  do healthCheckResult <- healthCheckStatus endpoint
-     return $ ResultHealthCheck {
-       Mattrai.ResultJson.healthCheckEndpoint = endpoint
-     , healthCheckResultItems = healthCheckResult
-     }
+   ResultHealthCheck endpoint <$> healthCheckStatus endpoint
+
 
 loop envs services ref = do _ <- mapServicesToJSON' envs services ref
                             threadDelay sixtySeconds

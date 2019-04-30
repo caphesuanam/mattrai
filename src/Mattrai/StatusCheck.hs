@@ -23,7 +23,7 @@ import System.Log.Logger (infoM)
 
 import Mattrai.Endpoint
 import Mattrai.Service
-import Mattrai.ResultJson
+import Mattrai.Result
 
 info :: Text -> IO()
 info = infoM "Mattrai" . unpack
