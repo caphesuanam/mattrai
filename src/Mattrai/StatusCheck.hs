@@ -1,9 +1,10 @@
+{-# LANGUAGE RankNTypes #-}
 module Mattrai.StatusCheck where
 
 import Prelude hiding (lookup)
 
 import Control.Exception (catch, displayException)
-import Control.Lens ((^.),(.~),(&),(^?),(^..))
+import Control.Lens ((^.),(.~),(&),(^?),(^..),Lens')
 import Control.Lens.Prism (_Just)
 import Data.Aeson (decode, Value(..), fromJSON)
 import Data.Aeson.Lens (key, _String, _Object, _Array)
@@ -71,6 +72,9 @@ healthCheckStatus (Endpoint url) = do
   let z1 = map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus1 t)) kys1
   let z2 = map (\t -> HealthCheckResult (HealthCheckItem t) (getServiceUpStatus2 t)) kys2
   return $ z1 ++ z2
+
+getDynamicInformation :: Endpoint -> Lens' (Response ByteString) Text -> IO (Maybe Text)
+getDynamicInformation (Endpoint url) accessor = (^? accessor) <$> getter url
 
 ping :: Endpoint -> IO PingResult
 ping (Endpoint url) =

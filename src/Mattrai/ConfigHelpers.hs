@@ -13,6 +13,15 @@ withAttribute :: Service -> (Text, Text) -> Service
 withAttribute service (name, value) = over (serInstances . traverse . instStaticInfo)
                                            ((name,value) :)
                                            service
+
+withDynamicProperty :: Service -> (Instance -> DynamicProperty) -> Service
+withDynamicProperty service propertyGenerator =
+      over (serInstances . traverse)
+           (\inst -> over instDynamicInfo
+                          (propertyGenerator inst :)
+                          inst)
+           service
+
 -- | Given a service and and endpoint add the endpoint to all instances
 -- This works well when called as an infix function and allows the with* functions to be stacked one after another
 withMiscEndpoint :: Service ->  MiscEndpoint -> Service

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
 -- |A module for running a server to monitor services across environments
 module Mattrai (runMattrai, defaultConfig, MattraiConfig(..))
 where
@@ -12,13 +12,16 @@ import           Text.Blaze ((!))
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Control.AutoUpdate (mkAutoUpdate, defaultUpdateSettings, UpdateSettings(updateAction, updateFreq))
-import Control.Lens (traverse, (^..), (^.))
+import Control.Lens (traverse, (^..), (^.), Lens')
 import Control.Monad (liftM, msum, forever)
 import Control.Monad.IO.Class (liftIO)
+import Data.ByteString.Lazy.Internal (ByteString)
 import Data.IORef
 import Data.List (sort)
+import Data.Maybe (fromMaybe)
 import Data.Set as Set (toList, fromList)
 import Data.Text (Text(..))
+import Network.Wreq (Response)
 import System.Log.Logger ( updateGlobalLogger
                          , rootLoggerName
                          , setLevel
@@ -30,7 +33,7 @@ import Mattrai.Endpoint
 import Mattrai.Service
 import Mattrai.Render (topLevelPage, report)
 import Mattrai.Result
-import Mattrai.StatusCheck (healthCheckStatus, ping)
+import Mattrai.StatusCheck (healthCheckStatus, ping, getDynamicInformation)
 
 -- |Default settings that should be overridden. Start by just overrriding `servicesToMonitor` and `environmentsToMonitor`.
 defaultConfig :: MattraiConfig
@@ -87,10 +90,16 @@ mapInstancesToEnvironment envName insts =
      , resultInstances       = newInstances
      }
 
+getSingleDynamicValue :: DynamicProperty -> IO (Text, Text)
+getSingleDynamicValue (DynamicProperty name url accessor) =
+    do r <- getDynamicInformation url accessor
+       return (name, fromMaybe "<Missing value" r)
+
 mapInstanceToResultInstance :: Instance -> IO ResultInstance
 mapInstanceToResultInstance inst = do
   pingResult <- ping $ inst ^. instPingEndpoint
   bHealthCheckResult <- mapM mapHealthCheckEndpointToResult $ inst ^.. instMiscEndpoints . traverse . _HealthCheckEndpoint
+  dynamicValues <- mapM getSingleDynamicValue (inst ^. instDynamicInfo)
   print bHealthCheckResult
   return $
     ResultInstance
@@ -101,7 +110,7 @@ mapInstanceToResultInstance inst = do
       , resultInstanceLogs          = inst ^.. instMiscEndpoints . traverse . _LogsEndpoint
       , resultInstanceHealthCheckResults = bHealthCheckResult
       , resultInstanceMiscEndpoints = inst ^.. instMiscEndpoints . traverse . _MiscEndpoint
-      , information = inst ^. instStaticInfo
+      , information = (inst ^. instStaticInfo) ++ dynamicValues
       }
 
 mapHealthCheckEndpointToResult :: Endpoint -> IO ResultHealthCheck

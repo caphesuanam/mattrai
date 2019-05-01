@@ -3,8 +3,10 @@
 module Mattrai.Service where
 
 import Control.Lens
+import Data.ByteString.Lazy.Internal (ByteString)
 import Data.Hashable (Hashable)
 import Data.Text (Text)
+import Network.Wreq (Response)
 
 import Mattrai.Endpoint
 
@@ -24,6 +26,12 @@ newtype ServiceName = ServiceName {
 } deriving Show
 
 
+data DynamicProperty = DynamicProperty {
+  _dynamicPropertyName :: Text
+, _dynamicPropertyEndpoint :: Endpoint
+, _dynamicPropertyAccessor :: Lens' (Response ByteString) Text
+}
+
 -- |Instances of services that need to be observed. Instances have unique endpoints and live in
 -- one and only one environment.
 data Instance = Instance {
@@ -40,16 +48,16 @@ data Instance = Instance {
   -- |Information on the instance expressed as key/value pairs of strings
 , _instStaticInfo           :: [(Text, Text)]
 
---   -- |Dynamic Properties consist of a property name, an endpoint and a lense/prism.
---   -- The endpoint is called and the prism is used on the result with view.
---   -- This can be used to extract the git version number from an endpoint, for example.
--- , _instDynamicInfo          :: [(Text, Endpoint, (HTTP_RESULT -> Text))]
+  -- |Dynamic Properties consist of a property name, an endpoint and a lense/prism.
+  -- The endpoint is called and the prism is used on the result with view.
+  -- This can be used to extract the git version number from an endpoint, for example.
+, _instDynamicInfo          :: [DynamicProperty]
 }
 
 -- |Create a service instance with the minimum mandatory information.
 -- Config helpers can then be used to add information across instances.
 serviceInstance :: EnvironmentName -> Text -> Instance
-serviceInstance environment ep = Instance environment (Endpoint ep) [] []
+serviceInstance environment ep = Instance environment (Endpoint ep) [] [] []
 
 -- |A service is a row in Mattrai. Each service has instances deployed across environments.
 data Service = Service {

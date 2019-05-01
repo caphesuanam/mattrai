@@ -48,6 +48,7 @@ testServices =
             "description" --> "Use to find stuff"
           , "owner"       --> "Alphabet"
           ]
+        , _instDynamicInfo = []
         }
       , Instance {
           _instEnvironmentName = production
@@ -62,6 +63,7 @@ testServices =
             "description" --> "Use to find stuff"
           , "owner"       --> "Alphabet"
           ]
+        , _instDynamicInfo = []
         }
       ]
     }
@@ -74,6 +76,7 @@ testServices =
         , _instMiscEndpoints = [
           ]
         , _instStaticInfo    = []
+        , _instDynamicInfo = []
         }
       ]
     }
