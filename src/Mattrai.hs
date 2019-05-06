@@ -92,12 +92,6 @@ getSingleDynamicValue :: DynamicProperty -> IO (Text, Text)
 getSingleDynamicValue (DynamicProperty name url accessor) =
        (,) name . fromMaybe "<Missing value" <$> getDynamicInformation url accessor
 
--- getSingleDynamicValue' :: DynamicProperty' -> IO (Text, Text)
--- getSingleDynamicValue' (DynamicProperty' name url) =
---     do infoM "FOO.BAR" ("Retriving dynamic property: " ++ show name ++ ", " ++ show url)
---        (,) name . fromMaybe "<Missing value>" <$> getDynamicInformation url accessor
---     where accessor :: Getting (First Text) (Response ByteString) Text = responseBody . key "path" . key "to" . _String
-
 mapInstanceToResultInstance :: Instance -> IO ResultInstance
 mapInstanceToResultInstance inst = do
   pingResult <- ping $ inst ^. instPingEndpoint
@@ -114,7 +108,7 @@ mapInstanceToResultInstance inst = do
       , resultInstanceLogs               = inst ^.. instMiscEndpoints . traverse . _LogsEndpoint
       , resultInstanceHealthCheckResults = bHealthCheckResult
       , resultInstanceMiscEndpoints      = inst ^.. instMiscEndpoints . traverse . _MiscEndpoint
-      , information                      = dynamicValues ++ [(pack "a", pack "b")] ++ inst ^. instStaticInfo
+      , information                      = dynamicValues ++ inst ^. instStaticInfo
       }
 
 mapHealthCheckEndpointToResult :: Endpoint -> IO ResultHealthCheck

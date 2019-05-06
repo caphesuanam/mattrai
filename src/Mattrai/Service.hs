@@ -33,11 +33,6 @@ data DynamicProperty = DynamicProperty {
 , _dynamicPropertyAccessor :: Getting (First Text) (Response ByteString) Text
 }
 
--- data DynamicProperty' = DynamicProperty' {
---   _dynamicPropertyName     :: Text
--- , _dynamicPropertyEndpoint :: Endpoint
--- }
-
 -- |Instances of services that need to be observed. Instances have unique endpoints and live in
 -- one and only one environment.
 data Instance = Instance {
@@ -58,7 +53,6 @@ data Instance = Instance {
   -- The endpoint is called and the prism is used on the result with view.
   -- This can be used to extract the git version number from an endpoint, for example.
 , _instDynamicInfo          :: [DynamicProperty]
---, _instDynamicInfo          :: [DynamicProperty]
 }
 
 -- |Create a service instance with the minimum mandatory information.

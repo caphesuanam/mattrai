@@ -9,12 +9,12 @@ import Control.Lens.Prism (_Just)
 import Control.Lens.Getter (Getting)
 import Data.Aeson (decode, Value(..), fromJSON)
 import Data.Aeson.Lens (key, _String, _Object, _Array)
-import Data.Monoid (First)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Data.Either (fromRight)
 import Data.HashMap.Strict as M (keys, HashMap(..), empty, lookup, fromList)
 import Data.List (isInfixOf)
 import Data.Maybe (maybe, fromMaybe, fromJust)
+import Data.Monoid (First)
 import Data.Text (Text, pack, unpack, append)
 import qualified Data.Vector as V (toList, empty)
 import Network.Connection (TLSSettings(..))
@@ -77,10 +77,6 @@ healthCheckStatus (Endpoint url) = do
 
 getDynamicInformation :: Endpoint -> Getting (First Text) (Response ByteString) Text -> IO (Maybe Text)
 getDynamicInformation (Endpoint url) accessor = (^? accessor) <$> getter url
-
-getDynamicInformation' :: Endpoint -> IO (Maybe Text)
-getDynamicInformation' (Endpoint url) = (^? accessor) <$> getter url
-                                         where accessor :: Getting (First Text) (Response ByteString) Text = responseBody . key "path" . key "to" . _String
 
 ping :: Endpoint -> IO PingResult
 ping (Endpoint url) =
