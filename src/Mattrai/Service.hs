@@ -5,6 +5,7 @@ module Mattrai.Service where
 import Control.Lens
 import Data.ByteString.Lazy.Internal (ByteString)
 import Data.Hashable (Hashable)
+import Data.Monoid (First)
 import Data.Text (Text)
 import Network.Wreq (Response)
 
@@ -27,10 +28,15 @@ newtype ServiceName = ServiceName {
 
 
 data DynamicProperty = DynamicProperty {
-  _dynamicPropertyName :: Text
+  _dynamicPropertyName     :: Text
 , _dynamicPropertyEndpoint :: Endpoint
-, _dynamicPropertyAccessor :: Lens' (Response ByteString) Text
+, _dynamicPropertyAccessor :: Getting (First Text) (Response ByteString) Text
 }
+
+-- data DynamicProperty' = DynamicProperty' {
+--   _dynamicPropertyName     :: Text
+-- , _dynamicPropertyEndpoint :: Endpoint
+-- }
 
 -- |Instances of services that need to be observed. Instances have unique endpoints and live in
 -- one and only one environment.
@@ -42,16 +48,17 @@ data Instance = Instance {
  -- A 2XX response results in a green box
 , _instPingEndpoint         :: Endpoint
 
-  -- |Other interesting endpoints releveant to the instance e.g. Jenkins links, Wiki links, metrics etc.
+  -- |Other interesting endpoints relevant to the instance e.g. Jenkins links, Wiki links, metrics etc.
 , _instMiscEndpoints        :: [MiscEndpoint]
 
   -- |Information on the instance expressed as key/value pairs of strings
 , _instStaticInfo           :: [(Text, Text)]
 
-  -- |Dynamic Properties consist of a property name, an endpoint and a lense/prism.
+  -- |Dynamic Properties consist of a property name, an endpoint and a lens/prism.
   -- The endpoint is called and the prism is used on the result with view.
   -- This can be used to extract the git version number from an endpoint, for example.
 , _instDynamicInfo          :: [DynamicProperty]
+--, _instDynamicInfo          :: [DynamicProperty]
 }
 
 -- |Create a service instance with the minimum mandatory information.

@@ -13,8 +13,10 @@ withAttribute :: Service -> (Text, Text) -> Service
 withAttribute service (name, value) = over (serInstances . traverse . instStaticInfo)
                                            ((name,value) :)
                                            service
-
+-- |Given a service and a function to generate a DynamicProperty specification for an instance
+-- return a service that will display those dynamic properties.
 withDynamicProperty :: Service -> (Instance -> DynamicProperty) -> Service
+--withDynamicProperty :: Service -> (Instance -> DynamicProperty) -> Service
 withDynamicProperty service propertyGenerator =
       over (serInstances . traverse)
            (\inst -> over instDynamicInfo

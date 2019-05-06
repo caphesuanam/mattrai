@@ -2,6 +2,8 @@ module Config where
 
 import Data.Text (Text)
 
+import Data.Aeson.Lens (key, _String)
+import Network.Wreq (responseBody)
 import Mattrai.Endpoint
 import Mattrai.Service
 import Mattrai
@@ -48,7 +50,12 @@ testServices =
             "description" --> "Use to find stuff"
           , "owner"       --> "Alphabet"
           ]
-        , _instDynamicInfo = []
+        , _instDynamicInfo = [
+            DynamicProperty "Dynamic information"
+                            (Endpoint "http://0.0.0.0:8080/info/happy")
+                            (responseBody . key "path" . key "to" . _String)
+            -- DynamicProperty' "Dynamic info" (Endpoint "http://0.0.0.0:8080/info/happy")
+          ]
         }
       , Instance {
           _instEnvironmentName = production
@@ -63,7 +70,10 @@ testServices =
             "description" --> "Use to find stuff"
           , "owner"       --> "Alphabet"
           ]
-        , _instDynamicInfo = []
+        , _instDynamicInfo = [
+            -- DynamicProperty "Information" (Endpoint "http://0.0.0.0:8080/info/happy") (responseBody . key "path" . key "to" . _String)
+            -- DynamicProperty' "Dynamic info" (Endpoint "http://0.0.0.0:8080/info/happy")
+        ]
         }
       ]
     }

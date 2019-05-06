@@ -13,15 +13,18 @@ import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Control.AutoUpdate (mkAutoUpdate, defaultUpdateSettings, UpdateSettings(updateAction, updateFreq))
 import Control.Lens (traverse, (^..), (^.), Lens')
+import Control.Lens.Getter (Getting)
 import Control.Monad (liftM, msum, forever)
 import Control.Monad.IO.Class (liftIO)
+import Data.Aeson.Lens (key, _String, _Object, _Array)
 import Data.ByteString.Lazy.Internal (ByteString)
 import Data.IORef
 import Data.List (sort)
 import Data.Maybe (fromMaybe)
+import Data.Monoid (First)
 import Data.Set as Set (toList, fromList)
-import Data.Text (Text(..))
-import Network.Wreq (Response)
+import Data.Text (Text(..), pack)
+import Network.Wreq (Response, responseBody)
 import System.Log.Logger ( updateGlobalLogger
                          , rootLoggerName
                          , setLevel
@@ -68,10 +71,9 @@ mapServicesToJSON envs services =
      ResultServices <$> mapM (mapServiceToResultService envNames) services
      where envNames = allEnvironments' envs
 
-mapServicesToJSON' :: [EnvironmentName] -> [Service] -> IORef ResultServices -> IO ResultServices
+mapServicesToJSON' :: [EnvironmentName] -> [Service] -> IORef ResultServices -> IO ()
 mapServicesToJSON' envs services ref = do infoM "FOO.BAR" "Retriving statuses"
                                           mapServicesToJSON envs services >>= writeIORef ref
-                                          readIORef ref
 
 allEnvironments' :: [EnvironmentName] -> [Text]
 allEnvironments' = (^.. traverse . environmentNameAsString)
@@ -84,33 +86,35 @@ mapServiceToResultService envNames service =
 
 mapInstancesToEnvironment :: Text -> [Instance] -> IO ResultEnvironment
 mapInstancesToEnvironment envName insts =
-  do newInstances <- mapM mapInstanceToResultInstance insts
-     return $ ResultEnvironment {
-       resultEnvironmentName = envName
-     , resultInstances       = newInstances
-     }
+     ResultEnvironment envName <$> mapM mapInstanceToResultInstance insts
 
 getSingleDynamicValue :: DynamicProperty -> IO (Text, Text)
 getSingleDynamicValue (DynamicProperty name url accessor) =
-    do r <- getDynamicInformation url accessor
-       return (name, fromMaybe "<Missing value" r)
+       (,) name . fromMaybe "<Missing value" <$> getDynamicInformation url accessor
+
+-- getSingleDynamicValue' :: DynamicProperty' -> IO (Text, Text)
+-- getSingleDynamicValue' (DynamicProperty' name url) =
+--     do infoM "FOO.BAR" ("Retriving dynamic property: " ++ show name ++ ", " ++ show url)
+--        (,) name . fromMaybe "<Missing value>" <$> getDynamicInformation url accessor
+--     where accessor :: Getting (First Text) (Response ByteString) Text = responseBody . key "path" . key "to" . _String
 
 mapInstanceToResultInstance :: Instance -> IO ResultInstance
 mapInstanceToResultInstance inst = do
   pingResult <- ping $ inst ^. instPingEndpoint
   bHealthCheckResult <- mapM mapHealthCheckEndpointToResult $ inst ^.. instMiscEndpoints . traverse . _HealthCheckEndpoint
   dynamicValues <- mapM getSingleDynamicValue (inst ^. instDynamicInfo)
+  infoM "FOO.BAR" ("Got dynamic lvalues: " ++ (show dynamicValues))
   print bHealthCheckResult
   return $
     ResultInstance
-      { resultInstanceEnvironmentName = inst ^. instEnvironmentName . environmentNameAsString
-      , resultInstancePingEndpoint = inst ^. instPingEndpoint
-      , resultInstancePingResult = pingResult
-      , resultInstanceDocumentation = inst ^.. instMiscEndpoints . traverse . _DocsEndpoint
-      , resultInstanceLogs          = inst ^.. instMiscEndpoints . traverse . _LogsEndpoint
+      { resultInstanceEnvironmentName    = inst ^. instEnvironmentName . environmentNameAsString
+      , resultInstancePingEndpoint       = inst ^. instPingEndpoint
+      , resultInstancePingResult         = pingResult
+      , resultInstanceDocumentation      = inst ^.. instMiscEndpoints . traverse . _DocsEndpoint
+      , resultInstanceLogs               = inst ^.. instMiscEndpoints . traverse . _LogsEndpoint
       , resultInstanceHealthCheckResults = bHealthCheckResult
-      , resultInstanceMiscEndpoints = inst ^.. instMiscEndpoints . traverse . _MiscEndpoint
-      , information = (inst ^. instStaticInfo) ++ dynamicValues
+      , resultInstanceMiscEndpoints      = inst ^.. instMiscEndpoints . traverse . _MiscEndpoint
+      , information                      = dynamicValues ++ [(pack "a", pack "b")] ++ inst ^. instStaticInfo
       }
 
 mapHealthCheckEndpointToResult :: Endpoint -> IO ResultHealthCheck
@@ -118,7 +122,7 @@ mapHealthCheckEndpointToResult endpoint =
    ResultHealthCheck endpoint <$> healthCheckStatus endpoint
 
 
-loop envs services ref = do _ <- mapServicesToJSON' envs services ref
+loop envs services ref = do mapServicesToJSON' envs services ref
                             threadDelay sixtySeconds
                             loop envs services ref
        where sixtySeconds = 60000000

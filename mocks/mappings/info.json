@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/info/happy"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "info/happy.json"
+  }
+}
+
