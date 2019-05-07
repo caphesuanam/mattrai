@@ -66,6 +66,12 @@ getServiceUpStatus locator payload ky =
   else
     Down
 
+callEndpoint :: Endpoint -> IO (Maybe (Response ByteString))
+callEndpoint (Endpoint url) =
+       wrapLog (append "Calling: " url) $
+         catch (Just <$> getter url)
+               $ \(_ :: HttpException) -> return Nothing
+
 healthCheckStatus :: Endpoint -> IO [HealthCheckResult]
 healthCheckStatus (Endpoint url) = do
   payload <- wrapLog (append "Healthcheck check: " url) $
@@ -81,7 +87,11 @@ healthCheckStatus (Endpoint url) = do
   return $ z1 ++ z2
 
 getDynamicInformation :: Endpoint -> Getting (First Text) (Response ByteString) Text -> IO (Maybe Text)
-getDynamicInformation (Endpoint url) accessor = (^? accessor) <$> getter url
+getDynamicInformation url accessor =
+   do r <- callEndpoint url
+      return $ case r of
+        Just r  -> r ^? accessor
+        Nothing -> Nothing
 
 ping :: Endpoint -> IO PingResult
 ping (Endpoint url) =
