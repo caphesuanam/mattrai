@@ -16,7 +16,7 @@ Health checks work with Spring compatible health check endpoints.
 1. `touch conf/Main.hs`
 1. Enter the following in `conf/Main.hs`:
 
-```
+~~~ {.haskell}
 import Data.Text (Text)
 
 import Mattrai.Endpoint
@@ -96,11 +96,13 @@ testServices =
       ]
     }
   ]
-```
+~~~
 
 1. Then run
 
-```docker run -d -p 8080:8000 -v `pwd`/conf:/service/app --name mattrai caphesuanong/mattrai```
+```Shell
+docker run -d -p 8080:8000 -v `pwd`/conf:/service/app --name mattrai caphesuanong/mattra
+i```
 
 1. Wait about 10 seconds.
 
