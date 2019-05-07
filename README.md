@@ -102,7 +102,7 @@ testServices =
 
 ```Shell
 docker run -d -p 8080:8000 -v `pwd`/conf:/service/app --name mattrai caphesuanong/mattra
-i```
+```
 
 1. Wait about 10 seconds.
 
