@@ -98,7 +98,7 @@ instanceInformation inst =
           optional "Logs" (mapM_ (div . urlToAnchor)) resultInstanceLogs
           optional "Healthcheck Status" statusHealthCheckTable resultInstanceHealthCheckResults
           optional "Other Endpoints" (mapM_ (uncurry miscEndpointEntry)) resultInstanceMiscEndpoints
-          optional "Information" informationTable information
+          optional "Properties" informationTable information
 
 miscEndpointEntry :: Text -> Endpoint -> Html
 miscEndpointEntry name val = div $ do b (toHtml name)
@@ -108,7 +108,7 @@ miscEndpointEntry name val = div $ do b (toHtml name)
 informationTable :: [(Text,Text)] -> Html
 informationTable entries =
     table $ mconcat $ map informationRow entries
-    where informationRow (key,value) = tr $ do td ! A.style "padding: 5px" $ toHtml key
+    where informationRow (key,value) = tr $ do td ! class_ "propertyKey" ! A.style "padding: 5px" $ toHtml key
                                                td ! A.style "padding: 5px" $ toHtml value
 
 statusService :: ResultService -> Html

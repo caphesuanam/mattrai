@@ -38,6 +38,8 @@ import Mattrai.Render (topLevelPage, report)
 import Mattrai.Result
 import Mattrai.StatusCheck (healthCheckStatus, ping, getDynamicInformation)
 
+infoLog = infoM "Matrai"
+
 -- |Default settings that should be overridden. Start by just overrriding `servicesToMonitor` and `environmentsToMonitor`.
 defaultConfig :: MattraiConfig
 defaultConfig = MattraiConfig {
@@ -72,7 +74,7 @@ mapServicesToJSON envs services =
      where envNames = allEnvironments' envs
 
 mapServicesToJSON' :: [EnvironmentName] -> [Service] -> IORef ResultServices -> IO ()
-mapServicesToJSON' envs services ref = do infoM "FOO.BAR" "Retriving statuses"
+mapServicesToJSON' envs services ref = do infoLog "Retriving statuses"
                                           mapServicesToJSON envs services >>= writeIORef ref
 
 allEnvironments' :: [EnvironmentName] -> [Text]
@@ -97,7 +99,7 @@ mapInstanceToResultInstance inst = do
   pingResult <- ping $ inst ^. instPingEndpoint
   bHealthCheckResult <- mapM mapHealthCheckEndpointToResult $ inst ^.. instMiscEndpoints . traverse . _HealthCheckEndpoint
   dynamicValues <- mapM getSingleDynamicValue (inst ^. instDynamicInfo)
-  infoM "FOO.BAR" ("Got dynamic lvalues: " ++ (show dynamicValues))
+  infoLog $ "Got dynamic values: " ++ show dynamicValues
   print bHealthCheckResult
   return $
     ResultInstance

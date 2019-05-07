@@ -111,3 +111,7 @@
   width: 100%;
   text-align: center;
 }
+
+.propertyKey {
+  font-weight: bold;
+}

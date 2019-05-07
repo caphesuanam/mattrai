@@ -95,6 +95,7 @@ healthCheckEndpoint = HealthCheckEndpoint . Endpoint
 makeLenses ''EnvironmentName
 makeLenses ''Instance
 makeLenses ''Service
+makeLenses ''DynamicProperty
 
 -- * Miscellaneous
 

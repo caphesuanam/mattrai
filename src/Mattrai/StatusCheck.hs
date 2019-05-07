@@ -1,5 +1,10 @@
 {-# LANGUAGE RankNTypes #-}
-module Mattrai.StatusCheck where
+module Mattrai.StatusCheck (
+   getDynamicInformation
+ , ping
+ , healthCheckStatus
+)
+where
 
 import Prelude hiding (lookup)
 
