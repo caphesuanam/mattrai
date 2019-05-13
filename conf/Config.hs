@@ -4,6 +4,7 @@ import Data.Text (Text)
 
 import Data.Aeson.Lens (key, _String)
 import Network.Wreq (responseBody)
+import Mattrai.ConfigHelpers
 import Mattrai.Endpoint
 import Mattrai.Service
 import Mattrai
@@ -34,9 +35,7 @@ config = defaultConfig {
 
 testServices =
   [
-    Service {
-      _serName = ServiceName "Google"
-    , _serInstances = [
+    service "Google" [
         Instance {
           _instEnvironmentName = production
         , _instPingEndpoint    = Endpoint "http://google.com"
@@ -54,12 +53,11 @@ testServices =
             DynamicProperty "Dynamic information"
                             (Endpoint "http://0.0.0.0:8080/info/happy")
                             (responseBody . key "path" . key "to" . _String)
-            -- DynamicProperty' "Dynamic info" (Endpoint "http://0.0.0.0:8080/info/happy")
           ]
         }
       , Instance {
           _instEnvironmentName = production
-        , _instPingEndpoint    = Endpoint "http://google.com"
+        , _instPingEndpoint    = Endpoint "http://google.co.uk"
         , _instMiscEndpoints = [
             DocsEndpoint $ Endpoint "https://about.google"
           , LogsEndpoint $ Endpoint "http://google.com?q=logs"
@@ -70,26 +68,12 @@ testServices =
             "description" --> "Use to find stuff"
           , "owner"       --> "Alphabet"
           ]
-        , _instDynamicInfo = [
-            -- DynamicProperty "Information" (Endpoint "http://0.0.0.0:8080/info/happy") (responseBody . key "path" . key "to" . _String)
-            -- DynamicProperty' "Dynamic info" (Endpoint "http://0.0.0.0:8080/info/happy")
-        ]
+        , _instDynamicInfo = [ ]
         }
       ]
-    }
-  , Service {
-      _serName = ServiceName "Yahoo"
-    , _serInstances = [
-        Instance {
-          _instEnvironmentName = production
-        , _instPingEndpoint    = Endpoint "http://yahoo.com"
-        , _instMiscEndpoints = [
-          ]
-        , _instStaticInfo    = []
-        , _instDynamicInfo = []
-        }
-      ]
-    }
+  , service "Yahoo" [
+        serviceInstance production "http://yahoo.com"
+    ]
   ]
 
 

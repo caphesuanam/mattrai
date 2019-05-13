@@ -73,11 +73,8 @@ callEndpoint (Endpoint url) =
                $ \(_ :: HttpException) -> return Nothing
 
 healthCheckStatus :: Endpoint -> IO [HealthCheckResult]
-healthCheckStatus (Endpoint url) = do
-  payload <- wrapLog (append "Healthcheck check: " url) $
-      catch (Just <$> getter url)
-            $ \(_ :: HttpException) -> return Nothing
-
+healthCheckStatus url = do
+  payload <- callEndpoint url
   let kys1 = getKeys ["status"] (key "details") payload
   let kys2 = getKeys ["details", "status"] id payload
   let getServiceUpStatus1 = getServiceUpStatus (key "details") payload
@@ -87,11 +84,7 @@ healthCheckStatus (Endpoint url) = do
   return $ z1 ++ z2
 
 getDynamicInformation :: Endpoint -> Getting (First Text) (Response ByteString) Text -> IO (Maybe Text)
-getDynamicInformation url accessor =
-   do r <- callEndpoint url
-      return $ case r of
-        Just r  -> r ^? accessor
-        Nothing -> Nothing
+getDynamicInformation url accessor = maybe Nothing (^? accessor) <$> callEndpoint url
 
 ping :: Endpoint -> IO PingResult
 ping (Endpoint url) =
