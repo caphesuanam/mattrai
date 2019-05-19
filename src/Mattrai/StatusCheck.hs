@@ -37,15 +37,31 @@ info :: Text -> IO()
 info = infoM "Mattrai" . unpack
 
 getter :: Text -> IO (Response ByteString)
-getter = let opts = defaults & manager .~ Left (tlsManagerSettings { managerResponseTimeout = responseTimeoutMicro 1000000
-                                                                   {-, settingDisableCertificateValidation = True-}})
-                             & manager .~ Left (mkManagerSettingsContext Nothing
-                                                                         (TLSSettingsSimple {
-                                                                           settingDisableCertificateValidation = True,
-                                                                           settingDisableSession=False,
-                                                                           settingUseServerName=True})
-                                                                         Nothing)
+-- getter = let opts = defaults & manager .~ Left (tlsManagerSettings { managerResponseTimeout = responseTimeoutMicro 1000000
+--                                                                    {-, settingDisableCertificateValidation = True-}})
+--                              & manager .~ Left (mkManagerSettingsContext Nothing
+--                                                                          (TLSSettingsSimple {
+--                                                                            settingDisableCertificateValidation = True,
+--                                                                            settingDisableSession=False,
+--                                                                            settingUseServerName=True})
+--                                                                          Nothing)
+--          in getWith opts . unpack
+
+getter = let opts = defaults & manager .~ Left (mySettings)
          in getWith opts . unpack
+
+
+mySettings =
+  part1 { managerResponseTimeout = responseTimeoutMicro 1000000 }
+  where
+    part1 = mkManagerSettingsContext
+       Nothing
+       (TLSSettingsSimple {
+          settingDisableCertificateValidation = True,
+          settingDisableSession = False,
+          settingUseServerName = True
+       })
+       Nothing
 
 httpErrorHandler (HttpExceptionRequest _ (ConnectionFailure cf))    = if "does not exist" `isInfixOf` displayException cf
                                                                       then DnsFailure
