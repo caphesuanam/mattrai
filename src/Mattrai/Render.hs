@@ -193,8 +193,9 @@ htmlFrameWork footer theBody =
                    body $
                      do divClass "back" mempty
                         theBody
-                        divClass "customFooter" $ preEscapedToHtml footer
-                        pageFooter
+                        divClass "footer" $ do
+                          divClass "customFooter" $ preEscapedToHtml footer
+                          pageFooter
 
 reportService :: ResultService -> Html
 reportService service = do h2 $ toHtml $ resServiceName service
